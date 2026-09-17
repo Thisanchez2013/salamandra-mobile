@@ -1,16 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { supabase } from '../lib/supabase';
 
@@ -21,6 +21,8 @@ export default function LoginScreen() {
 
   const [erroUsuario, setErroUsuario] = useState('');
   const [erroSenha, setErroSenha] = useState('');
+
+  const router = useRouter();
 
   async function handleLogin() {
     let formularioValido = true;
@@ -82,6 +84,8 @@ export default function LoginScreen() {
       console.log('Usuário:', data.perfil?.usuario);
       console.log('Nome:', data.perfil?.nome);
       console.log('Perfil:', data.perfil?.perfil);
+
+      router.replace('/home');
     } catch (error) {
       console.log('Erro inesperado no login:', error);
       setErroSenha('Não foi possível realizar o login.');
@@ -105,44 +109,61 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView className="flex-1 bg-salamandra-background">
       <KeyboardAvoidingView
-        style={styles.keyboardView}
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          className="flex-1"
+          contentContainerClassName="flex-grow"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.container}>
-            {/* Marca */}
-            <View style={styles.brandContainer}>
-              <Text style={styles.brand}>SALAMANDRA</Text>
-              <Text style={styles.brandSubtitle}>
+          <View className="min-h-full flex-1 justify-between px-7 py-10">
+
+            {/* ==================================================
+                MARCA
+            ================================================== */}
+
+            <View className="mt-[30px] items-center">
+              <Text className="text-[32px] font-bold tracking-[3px] text-salamandra-gold">
+                SALAMANDRA
+              </Text>
+
+              <Text className="mt-1.5 text-[15px] text-[#AFAFAF]">
                 Sistema de Gestão
               </Text>
             </View>
 
-            {/* Login */}
-            <View style={styles.loginContainer}>
-              <Text style={styles.title}>
+            {/* ==================================================
+                LOGIN
+            ================================================== */}
+
+            <View className="w-full">
+              <Text className="text-[27px] font-bold text-white">
                 Bem-vindo de volta
               </Text>
 
-              <Text style={styles.description}>
+              <Text className="mb-[30px] mt-2 text-[15px] leading-[22px] text-salamandra-muted">
                 Entre com suas credenciais para acessar o sistema.
               </Text>
 
-              {/* Usuário */}
-              <View style={styles.fieldContainer}>
-                <Text style={styles.label}>Usuário</Text>
+              {/* ==================================================
+                  USUÁRIO
+              ================================================== */}
+
+              <View className="mb-5">
+                <Text className="mb-2 text-sm font-semibold text-[#D6D6D6]">
+                  Usuário
+                </Text>
 
                 <TextInput
-                  style={[
-                    styles.input,
-                    erroUsuario ? styles.inputError : null,
-                  ]}
+                  className={`h-[54px] rounded-xl border bg-salamandra-card px-4 text-base text-white ${
+                    erroUsuario
+                      ? 'border-[#C94C4C]'
+                      : 'border-salamandra-border'
+                  }`}
                   placeholder="Digite seu usuário"
                   placeholderTextColor="#777777"
                   value={usuario}
@@ -153,24 +174,30 @@ export default function LoginScreen() {
                 />
 
                 {erroUsuario ? (
-                  <Text style={styles.errorText}>
+                  <Text className="mt-[7px] text-xs text-[#E57373]">
                     {erroUsuario}
                   </Text>
                 ) : null}
               </View>
 
-              {/* Senha */}
-              <View style={styles.fieldContainer}>
-                <Text style={styles.label}>Senha</Text>
+              {/* ==================================================
+                  SENHA
+              ================================================== */}
+
+              <View className="mb-5">
+                <Text className="mb-2 text-sm font-semibold text-[#D6D6D6]">
+                  Senha
+                </Text>
 
                 <View
-                  style={[
-                    styles.passwordContainer,
-                    erroSenha ? styles.inputError : null,
-                  ]}
+                  className={`h-[54px] flex-row items-center rounded-xl border bg-salamandra-card ${
+                    erroSenha
+                      ? 'border-[#C94C4C]'
+                      : 'border-salamandra-border'
+                  }`}
                 >
                   <TextInput
-                    style={styles.passwordInput}
+                    className="h-full flex-1 px-4 text-base text-white"
                     placeholder="Digite sua senha"
                     placeholderTextColor="#777777"
                     value={senha}
@@ -183,7 +210,7 @@ export default function LoginScreen() {
                   />
 
                   <Pressable
-                    style={styles.showPasswordButton}
+                    className="h-full justify-center px-4 active:opacity-70"
                     onPress={() =>
                       setMostrarSenha(!mostrarSenha)
                     }
@@ -202,27 +229,31 @@ export default function LoginScreen() {
                 </View>
 
                 {erroSenha ? (
-                  <Text style={styles.errorText}>
+                  <Text className="mt-[7px] text-xs text-[#E57373]">
                     {erroSenha}
                   </Text>
                 ) : null}
               </View>
 
-              {/* Botão entrar */}
+              {/* ==================================================
+                  BOTÃO ENTRAR
+              ================================================== */}
+
               <Pressable
-                style={({ pressed }) => [
-                  styles.loginButton,
-                  pressed && styles.loginButtonPressed,
-                ]}
+                className="mt-2.5 h-14 items-center justify-center rounded-xl bg-salamandra-gold active:opacity-80"
                 onPress={handleLogin}
               >
-                <Text style={styles.loginButtonText}>
+                <Text className="text-[15px] font-extrabold tracking-[1px] text-salamandra-background">
                   ENTRAR
                 </Text>
               </Pressable>
             </View>
 
-            <Text style={styles.footer}>
+            {/* ==================================================
+                RODAPÉ
+            ================================================== */}
+
+            <Text className="mt-10 text-center text-xs text-[#666666]">
               Salamandra Mobile
             </Text>
           </View>
@@ -231,145 +262,3 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-
-  keyboardView: {
-    flex: 1,
-  },
-
-  scrollContent: {
-    flexGrow: 1,
-  },
-
-  container: {
-    flex: 1,
-    minHeight: '100%',
-    paddingHorizontal: 28,
-    paddingVertical: 40,
-    justifyContent: 'space-between',
-  },
-
-  brandContainer: {
-    alignItems: 'center',
-    marginTop: 30,
-  },
-
-  brand: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#D4AF37',
-    letterSpacing: 3,
-  },
-
-  brandSubtitle: {
-    marginTop: 6,
-    fontSize: 15,
-    color: '#AFAFAF',
-  },
-
-  loginContainer: {
-    width: '100%',
-  },
-
-  title: {
-    fontSize: 27,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-
-  description: {
-    marginTop: 8,
-    marginBottom: 30,
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#999999',
-  },
-
-  fieldContainer: {
-    marginBottom: 20,
-  },
-
-  label: {
-    marginBottom: 8,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#D6D6D6',
-  },
-
-  input: {
-    height: 54,
-    borderWidth: 1,
-    borderColor: '#333333',
-    borderRadius: 12,
-    backgroundColor: '#1C1C1C',
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-
-  passwordContainer: {
-    height: 54,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333333',
-    borderRadius: 12,
-    backgroundColor: '#1C1C1C',
-  },
-
-  passwordInput: {
-    flex: 1,
-    height: '100%',
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-
-  showPasswordButton: {
-    height: '100%',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-
-  inputError: {
-    borderColor: '#C94C4C',
-  },
-
-  errorText: {
-    marginTop: 7,
-    fontSize: 12,
-    color: '#E57373',
-  },
-
-  loginButton: {
-    height: 56,
-    marginTop: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    backgroundColor: '#D4AF37',
-  },
-
-  loginButtonPressed: {
-    opacity: 0.8,
-  },
-
-  loginButtonText: {
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: '#121212',
-  },
-
-  footer: {
-    marginTop: 40,
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#666666',
-  },
-});
