@@ -1,5 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -7,11 +10,112 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { supabase } from '../lib/supabase';
+
 export default function HomeScreen() {
+  const router = useRouter();
+
+  const [nomeUsuario, setNomeUsuario] = useState('');
+
+  useEffect(() => {
+    carregarPerfil();
+  }, []);
+
+  async function carregarPerfil() {
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        console.log(
+          'Usuário sem sessão. Redirecionando para Login.'
+        );
+
+        router.replace('/');
+        return;
+      }
+
+      const user = session.user;
+
+      const { data: perfil, error: perfilError } =
+        await supabase
+          .from('perfis')
+          .select('nome')
+          .eq('id', user.id)
+          .single();
+
+      if (perfilError) {
+        console.log(
+          'Erro ao carregar perfil:',
+          perfilError
+        );
+        return;
+      }
+
+      if (perfil?.nome) {
+        const primeiroNome =
+          perfil.nome.trim().split(' ')[0];
+
+        setNomeUsuario(primeiroNome);
+      }
+    } catch (error) {
+      console.log(
+        'Erro inesperado ao carregar perfil:',
+        error
+      );
+    }
+  }
+
+  function handleLogout() {
+  Alert.alert(
+    'Sair do sistema',
+    'Deseja realmente sair da sua conta?',
+    [
+      {
+        text: 'Cancelar',
+        style: 'cancel',
+      },
+      {
+        text: 'Sair',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const { error } = await supabase.auth.signOut();
+
+            if (error) {
+              console.log('Erro ao sair:', error);
+
+              Alert.alert(
+                'Erro',
+                'Não foi possível sair da sua conta.'
+              );
+
+              return;
+            }
+
+            router.replace('/');
+          } catch (error) {
+            console.log(
+              'Erro inesperado ao sair:',
+              error
+            );
+
+            Alert.alert(
+              'Erro',
+              'Não foi possível sair da sua conta.'
+            );
+          }
+        },
+      },
+    ]
+  );
+}
+
   return (
     <SafeAreaView className="flex-1 bg-salamandra-background">
       <View className="flex-1 bg-salamandra-background">
-
         <ScrollView
           className="flex-1 bg-salamandra-background px-[22px] pt-5"
           showsVerticalScrollIndicator={false}
@@ -31,7 +135,10 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            <Pressable className="h-11 w-11 items-center justify-center rounded-[14px] border border-salamandra-border bg-salamandra-card active:opacity-70">
+            <Pressable
+              className="h-11 w-11 items-center justify-center rounded-[14px] border border-salamandra-border bg-salamandra-card active:opacity-70"
+              onPress={handleLogout}
+            >
               <Ionicons
                 name="person-outline"
                 size={22}
@@ -46,7 +153,7 @@ export default function HomeScreen() {
 
           <View className="mb-6 mt-[34px]">
             <Text className="text-[25px] font-bold text-white">
-              Bom dia, Thiago 👋
+              Bom dia{nomeUsuario ? `, ${nomeUsuario}` : ''} 👋
             </Text>
 
             <Text className="mt-1.5 text-sm text-salamandra-muted">
@@ -91,7 +198,6 @@ export default function HomeScreen() {
           ================================================== */}
 
           <View className="mt-[14px] flex-row flex-wrap justify-between">
-
             {/* VENDAS */}
 
             <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
@@ -205,7 +311,6 @@ export default function HomeScreen() {
             </View>
 
             <View className="flex-row flex-wrap justify-between">
-
               {/* NOVA VENDA */}
 
               <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70">
@@ -315,7 +420,6 @@ export default function HomeScreen() {
         ================================================== */}
 
         <View className="h-[72px] flex-row items-center justify-around border-t border-[#292929] bg-[#181818]">
-
           {/* INÍCIO */}
 
           <Pressable className="flex-1 items-center justify-center">

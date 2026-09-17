@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,17 +18,47 @@ export default function LoginScreen() {
   const [usuario, setUsuario] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [carregando, setCarregando] = useState(false);
 
   const [erroUsuario, setErroUsuario] = useState('');
   const [erroSenha, setErroSenha] = useState('');
 
   const router = useRouter();
 
+  useEffect(() => {
+  verificarSessao();
+}, []);
+
+async function verificarSessao() {
+  try {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (error) {
+      console.log('Erro ao verificar sessão:', error);
+      return;
+    }
+
+    if (session) {
+      console.log('Sessão encontrada. Redirecionando para Home.');
+      router.replace('/home');
+    }
+  } catch (error) {
+    console.log('Erro inesperado ao verificar sessão:', error);
+  }
+}
+
   async function handleLogin() {
     let formularioValido = true;
 
     setErroUsuario('');
     setErroSenha('');
+
+    if (carregando) {
+      return;
+    }
 
     if (!usuario.trim()) {
       setErroUsuario('Informe seu usuário.');
@@ -43,6 +73,8 @@ export default function LoginScreen() {
     if (!formularioValido) {
       return;
     }
+
+    setCarregando(true);
 
     try {
       const { data, error } = await supabase.functions.invoke(
@@ -89,6 +121,8 @@ export default function LoginScreen() {
     } catch (error) {
       console.log('Erro inesperado no login:', error);
       setErroSenha('Não foi possível realizar o login.');
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -159,11 +193,10 @@ export default function LoginScreen() {
                 </Text>
 
                 <TextInput
-                  className={`h-[54px] rounded-xl border bg-salamandra-card px-4 text-base text-white ${
-                    erroUsuario
-                      ? 'border-[#C94C4C]'
-                      : 'border-salamandra-border'
-                  }`}
+                  className={`h-[54px] rounded-xl border bg-salamandra-card px-4 text-base text-white ${erroUsuario
+                    ? 'border-[#C94C4C]'
+                    : 'border-salamandra-border'
+                    }`}
                   placeholder="Digite seu usuário"
                   placeholderTextColor="#777777"
                   value={usuario}
@@ -190,11 +223,10 @@ export default function LoginScreen() {
                 </Text>
 
                 <View
-                  className={`h-[54px] flex-row items-center rounded-xl border bg-salamandra-card ${
-                    erroSenha
-                      ? 'border-[#C94C4C]'
-                      : 'border-salamandra-border'
-                  }`}
+                  className={`h-[54px] flex-row items-center rounded-xl border bg-salamandra-card ${erroSenha
+                    ? 'border-[#C94C4C]'
+                    : 'border-salamandra-border'
+                    }`}
                 >
                   <TextInput
                     className="h-full flex-1 px-4 text-base text-white"
@@ -240,11 +272,13 @@ export default function LoginScreen() {
               ================================================== */}
 
               <Pressable
-                className="mt-2.5 h-14 items-center justify-center rounded-xl bg-salamandra-gold active:opacity-80"
+                className={`mt-2.5 h-14 items-center justify-center rounded-xl bg-salamandra-gold ${carregando ? 'opacity-60' : 'active:opacity-80'
+                  }`}
                 onPress={handleLogin}
+                disabled={carregando}
               >
                 <Text className="text-[15px] font-extrabold tracking-[1px] text-salamandra-background">
-                  ENTRAR
+                  {carregando ? 'ENTRANDO...' : 'ENTRAR'}
                 </Text>
               </Pressable>
             </View>
