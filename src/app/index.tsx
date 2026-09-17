@@ -12,6 +12,8 @@ import {
   View,
 } from 'react-native';
 
+import { supabase } from '../lib/supabase';
+
 export default function LoginScreen() {
   const [usuario, setUsuario] = useState('');
   const [senha, setSenha] = useState('');
@@ -20,7 +22,7 @@ export default function LoginScreen() {
   const [erroUsuario, setErroUsuario] = useState('');
   const [erroSenha, setErroSenha] = useState('');
 
-  function handleLogin() {
+  async function handleLogin() {
     let formularioValido = true;
 
     setErroUsuario('');
@@ -40,7 +42,50 @@ export default function LoginScreen() {
       return;
     }
 
-    console.log('Login validado.');
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'login-usuario',
+        {
+          body: {
+            usuario: usuario.trim().toLowerCase(),
+            senha,
+          },
+        }
+      );
+
+      if (error) {
+        console.log('Erro ao chamar login:', error);
+        setErroSenha('Usuário ou senha inválidos.');
+        return;
+      }
+
+      if (!data?.access_token || !data?.refresh_token) {
+        setErroSenha(
+          data?.error || 'Usuário ou senha inválidos.'
+        );
+        return;
+      }
+
+      const { error: sessionError } =
+        await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+
+      if (sessionError) {
+        console.log('Erro ao criar sessão:', sessionError);
+        setErroSenha('Não foi possível iniciar a sessão.');
+        return;
+      }
+
+      console.log('Login realizado com sucesso!');
+      console.log('Usuário:', data.perfil?.usuario);
+      console.log('Nome:', data.perfil?.nome);
+      console.log('Perfil:', data.perfil?.perfil);
+    } catch (error) {
+      console.log('Erro inesperado no login:', error);
+      setErroSenha('Não foi possível realizar o login.');
+    }
   }
 
   function handleUsuarioChange(texto: string) {
@@ -74,12 +119,16 @@ export default function LoginScreen() {
             {/* Marca */}
             <View style={styles.brandContainer}>
               <Text style={styles.brand}>SALAMANDRA</Text>
-              <Text style={styles.brandSubtitle}>Sistema de Gestão</Text>
+              <Text style={styles.brandSubtitle}>
+                Sistema de Gestão
+              </Text>
             </View>
 
             {/* Login */}
             <View style={styles.loginContainer}>
-              <Text style={styles.title}>Bem-vindo de volta</Text>
+              <Text style={styles.title}>
+                Bem-vindo de volta
+              </Text>
 
               <Text style={styles.description}>
                 Entre com suas credenciais para acessar o sistema.
@@ -104,7 +153,9 @@ export default function LoginScreen() {
                 />
 
                 {erroUsuario ? (
-                  <Text style={styles.errorText}>{erroUsuario}</Text>
+                  <Text style={styles.errorText}>
+                    {erroUsuario}
+                  </Text>
                 ) : null}
               </View>
 
@@ -131,21 +182,29 @@ export default function LoginScreen() {
                     onSubmitEditing={handleLogin}
                   />
 
-                 <Pressable
-  style={styles.showPasswordButton}
-  onPress={() => setMostrarSenha(!mostrarSenha)}
-  hitSlop={10}
->
-  <Ionicons
-    name={mostrarSenha ? 'eye-off-outline' : 'eye-outline'}
-    size={22}
-    color="#D4AF37"
-  />
-</Pressable>
+                  <Pressable
+                    style={styles.showPasswordButton}
+                    onPress={() =>
+                      setMostrarSenha(!mostrarSenha)
+                    }
+                    hitSlop={10}
+                  >
+                    <Ionicons
+                      name={
+                        mostrarSenha
+                          ? 'eye-off-outline'
+                          : 'eye-outline'
+                      }
+                      size={22}
+                      color="#D4AF37"
+                    />
+                  </Pressable>
                 </View>
 
                 {erroSenha ? (
-                  <Text style={styles.errorText}>{erroSenha}</Text>
+                  <Text style={styles.errorText}>
+                    {erroSenha}
+                  </Text>
                 ) : null}
               </View>
 
@@ -157,11 +216,15 @@ export default function LoginScreen() {
                 ]}
                 onPress={handleLogin}
               >
-                <Text style={styles.loginButtonText}>ENTRAR</Text>
+                <Text style={styles.loginButtonText}>
+                  ENTRAR
+                </Text>
               </Pressable>
             </View>
 
-            <Text style={styles.footer}>Salamandra Mobile</Text>
+            <Text style={styles.footer}>
+              Salamandra Mobile
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
