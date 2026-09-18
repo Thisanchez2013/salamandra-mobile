@@ -21,6 +21,10 @@ export default function HomeScreen() {
     carregarPerfil();
   }, []);
 
+  // ==================================================
+  // PERFIL / SESSÃO
+  // ==================================================
+
   async function carregarPerfil() {
     try {
       const {
@@ -68,50 +72,55 @@ export default function HomeScreen() {
     }
   }
 
-  function handleLogout() {
-  Alert.alert(
-    'Sair do sistema',
-    'Deseja realmente sair da sua conta?',
-    [
-      {
-        text: 'Cancelar',
-        style: 'cancel',
-      },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const { error } = await supabase.auth.signOut();
+  // ==================================================
+  // LOGOUT
+  // ==================================================
 
-            if (error) {
-              console.log('Erro ao sair:', error);
+  function handleLogout() {
+    Alert.alert(
+      'Sair do sistema',
+      'Deseja realmente sair da sua conta?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } =
+                await supabase.auth.signOut();
+
+              if (error) {
+                console.log('Erro ao sair:', error);
+
+                Alert.alert(
+                  'Erro',
+                  'Não foi possível sair da sua conta.'
+                );
+
+                return;
+              }
+
+              router.replace('/');
+            } catch (error) {
+              console.log(
+                'Erro inesperado ao sair:',
+                error
+              );
 
               Alert.alert(
                 'Erro',
                 'Não foi possível sair da sua conta.'
               );
-
-              return;
             }
-
-            router.replace('/');
-          } catch (error) {
-            console.log(
-              'Erro inesperado ao sair:',
-              error
-            );
-
-            Alert.alert(
-              'Erro',
-              'Não foi possível sair da sua conta.'
-            );
-          }
+          },
         },
-      },
-    ]
-  );
-}
+      ]
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-salamandra-background">
@@ -120,9 +129,7 @@ export default function HomeScreen() {
           className="flex-1 bg-salamandra-background px-[22px] pt-5"
           showsVerticalScrollIndicator={false}
         >
-          {/* ==================================================
-              CABEÇALHO
-          ================================================== */}
+          {/* CABEÇALHO */}
 
           <View className="flex-row items-center justify-between">
             <View>
@@ -147,13 +154,12 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          {/* ==================================================
-              BOAS-VINDAS
-          ================================================== */}
+          {/* BOAS-VINDAS */}
 
           <View className="mb-6 mt-[34px]">
             <Text className="text-[25px] font-bold text-white">
-              Bom dia{nomeUsuario ? `, ${nomeUsuario}` : ''} 👋
+              Bom dia
+              {nomeUsuario ? `, ${nomeUsuario}` : ''} 👋
             </Text>
 
             <Text className="mt-1.5 text-sm text-salamandra-muted">
@@ -161,9 +167,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {/* ==================================================
-              FATURAMENTO
-          ================================================== */}
+          {/* FATURAMENTO */}
 
           <View className="rounded-[18px] border border-salamandra-border bg-salamandra-card p-5">
             <View className="flex-row items-center justify-between">
@@ -193,13 +197,9 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {/* ==================================================
-              INDICADORES
-          ================================================== */}
+          {/* INDICADORES */}
 
           <View className="mt-[14px] flex-row flex-wrap justify-between">
-            {/* VENDAS */}
-
             <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
@@ -221,8 +221,6 @@ export default function HomeScreen() {
                 Realizadas
               </Text>
             </View>
-
-            {/* PRODUTOS */}
 
             <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
               <View className="flex-row items-center justify-between">
@@ -246,8 +244,6 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            {/* CLIENTES */}
-
             <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
@@ -269,8 +265,6 @@ export default function HomeScreen() {
                 Cadastrados
               </Text>
             </View>
-
-            {/* ESTOQUE BAIXO */}
 
             <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
               <View className="flex-row items-center justify-between">
@@ -295,9 +289,7 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* ==================================================
-              AÇÕES RÁPIDAS
-          ================================================== */}
+          {/* AÇÕES RÁPIDAS */}
 
           <View className="mt-7">
             <View className="mb-[14px]">
@@ -306,7 +298,7 @@ export default function HomeScreen() {
               </Text>
 
               <Text className="mt-1 text-xs text-[#777777]">
-                Acesse as principais funções
+                Acesse as principais funções do sistema
               </Text>
             </View>
 
@@ -316,8 +308,8 @@ export default function HomeScreen() {
               <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70">
                 <View className="mr-[11px] h-9 w-9 items-center justify-center rounded-[10px] bg-salamandra-gold">
                   <Ionicons
-                    name="add-outline"
-                    size={24}
+                    name="cart-outline"
+                    size={22}
                     color="#121212"
                   />
                 </View>
@@ -377,9 +369,7 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* ==================================================
-              ÚLTIMAS VENDAS
-          ================================================== */}
+          {/* ÚLTIMAS VENDAS */}
 
           <View className="mt-7">
             <View className="mb-[14px]">
@@ -411,17 +401,12 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Espaço para não ficar atrás da navegação */}
           <View className="h-5" />
         </ScrollView>
 
-        {/* ==================================================
-            NAVEGAÇÃO INFERIOR
-        ================================================== */}
+        {/* NAVEGAÇÃO INFERIOR */}
 
         <View className="h-[72px] flex-row items-center justify-around border-t border-[#292929] bg-[#181818]">
-          {/* INÍCIO */}
-
           <Pressable className="flex-1 items-center justify-center">
             <Ionicons
               name="home"
@@ -434,8 +419,6 @@ export default function HomeScreen() {
             </Text>
           </Pressable>
 
-          {/* RELATÓRIOS */}
-
           <Pressable className="flex-1 items-center justify-center">
             <Ionicons
               name="bar-chart-outline"
@@ -447,8 +430,6 @@ export default function HomeScreen() {
               Relatórios
             </Text>
           </Pressable>
-
-          {/* MENU */}
 
           <Pressable className="flex-1 items-center justify-center">
             <Ionicons
