@@ -2,8 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   View,
@@ -11,15 +13,56 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { supabase } from '../lib/supabase';
+import {
+  buscarDadosDashboard,
+  DashboardDados,
+} from '../services/dashboardService';
+
+const dadosIniciais: DashboardDados = {
+  faturamento: 0,
+  quantidadeVendas: 0,
+  quantidadeProdutos: 0,
+  quantidadeClientes: 0,
+  estoqueBaixo: 0,
+  ultimasVendas: [],
+};
 
 export default function HomeScreen() {
   const router = useRouter();
 
   const [nomeUsuario, setNomeUsuario] = useState('');
+  const [dashboard, setDashboard] =
+    useState<DashboardDados>(dadosIniciais);
+
+  const [atualizando, setAtualizando] = useState(false);
+
+  const [carregandoDashboard, setCarregandoDashboard] =
+    useState(true);
 
   useEffect(() => {
-    carregarPerfil();
+    carregarHome();
   }, []);
+
+  // ==================================================
+  // CARREGAMENTO DA HOME
+  // ==================================================
+
+  async function carregarHome() {
+    await Promise.all([
+      carregarPerfil(),
+      carregarDashboard(),
+    ]);
+  }
+
+  async function atualizarDashboard() {
+    try {
+      setAtualizando(true);
+
+      await carregarDashboard();
+    } finally {
+      setAtualizando(false);
+    }
+  }
 
   // ==================================================
   // PERFIL / SESSÃO
@@ -70,6 +113,55 @@ export default function HomeScreen() {
         error
       );
     }
+  }
+
+  // ==================================================
+  // DASHBOARD
+  // ==================================================
+
+  async function carregarDashboard() {
+    try {
+      const dados = await buscarDadosDashboard();
+
+      setDashboard(dados);
+
+      console.log(
+        'Dashboard carregado com sucesso:',
+        dados
+      );
+    } catch (error) {
+      console.log(
+        'Erro ao carregar Dashboard:',
+        error
+      );
+
+      Alert.alert(
+        'Erro ao carregar dados',
+        'Não foi possível atualizar o Dashboard. Tente novamente.'
+      );
+    }
+    finally {
+      setCarregandoDashboard(false);
+    }
+  }
+
+  // ==================================================
+  // FORMATAÇÃO
+  // ==================================================
+
+  function formatarMoeda(valor: number) {
+    return valor.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+  }
+
+  function formatarData(data: string) {
+    return new Date(data).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
   }
 
   // ==================================================
@@ -125,11 +217,22 @@ export default function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-salamandra-background">
       <View className="flex-1 bg-salamandra-background">
+
         <ScrollView
           className="flex-1 bg-salamandra-background px-[22px] pt-5"
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={atualizando}
+              onRefresh={atualizarDashboard}
+              tintColor="#D4AF37"
+              colors={['#D4AF37']}
+            />
+          }
         >
-          {/* CABEÇALHO */}
+          {/* ==================================================
+                              CABEÇALHO
+             ================================================== */}
 
           <View className="flex-row items-center justify-between">
             <View>
@@ -154,7 +257,9 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          {/* BOAS-VINDAS */}
+          {/* ==================================================
+                              BOAS-VINDAS
+             ================================================== */}
 
           <View className="mb-6 mt-[34px]">
             <Text className="text-[25px] font-bold text-white">
@@ -167,7 +272,9 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {/* FATURAMENTO */}
+          {/* ==================================================
+                              FATURAMENTO
+             ================================================== */}
 
           <View className="rounded-[18px] border border-salamandra-border bg-salamandra-card p-5">
             <View className="flex-row items-center justify-between">
@@ -176,9 +283,18 @@ export default function HomeScreen() {
                   FATURAMENTO
                 </Text>
 
-                <Text className="mt-2 text-[30px] font-extrabold text-white">
-                  R$ 0,00
-                </Text>
+                {carregandoDashboard ? (
+                  <View className="mt-3 h-[36px] justify-center">
+                    <ActivityIndicator
+                      size="small"
+                      color="#D4AF37"
+                    />
+                  </View>
+                ) : (
+                  <Text className="mt-2 text-[30px] font-extrabold text-white">
+                    {formatarMoeda(dashboard.faturamento)}
+                  </Text>
+                )}
               </View>
 
               <View className="h-12 w-12 items-center justify-center rounded-[14px] bg-[#272727]">
@@ -197,9 +313,14 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {/* INDICADORES */}
+          {/* ==================================================
+                              INDICADORES
+             ================================================== */}
 
           <View className="mt-[14px] flex-row flex-wrap justify-between">
+
+            {/* VENDAS */}
+
             <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
@@ -209,7 +330,7 @@ export default function HomeScreen() {
                 />
 
                 <Text className="text-[25px] font-extrabold text-white">
-                  0
+                  {dashboard.quantidadeVendas}
                 </Text>
               </View>
 
@@ -222,6 +343,8 @@ export default function HomeScreen() {
               </Text>
             </View>
 
+            {/* PRODUTOS */}
+
             <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
@@ -231,7 +354,7 @@ export default function HomeScreen() {
                 />
 
                 <Text className="text-[25px] font-extrabold text-white">
-                  0
+                  {dashboard.quantidadeProdutos}
                 </Text>
               </View>
 
@@ -244,6 +367,8 @@ export default function HomeScreen() {
               </Text>
             </View>
 
+            {/* CLIENTES */}
+
             <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
@@ -253,7 +378,7 @@ export default function HomeScreen() {
                 />
 
                 <Text className="text-[25px] font-extrabold text-white">
-                  0
+                  {dashboard.quantidadeClientes}
                 </Text>
               </View>
 
@@ -266,6 +391,8 @@ export default function HomeScreen() {
               </Text>
             </View>
 
+            {/* ESTOQUE BAIXO */}
+
             <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
@@ -275,7 +402,7 @@ export default function HomeScreen() {
                 />
 
                 <Text className="text-[25px] font-extrabold text-white">
-                  0
+                  {dashboard.estoqueBaixo}
                 </Text>
               </View>
 
@@ -289,7 +416,9 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* AÇÕES RÁPIDAS */}
+          {/* ==================================================
+                              AÇÕES RÁPIDAS
+             ================================================== */}
 
           <View className="mt-7">
             <View className="mb-[14px]">
@@ -303,6 +432,7 @@ export default function HomeScreen() {
             </View>
 
             <View className="flex-row flex-wrap justify-between">
+
               {/* NOVA VENDA */}
 
               <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70">
@@ -369,7 +499,9 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* ÚLTIMAS VENDAS */}
+          {/* ==================================================
+                              ÚLTIMAS VENDAS
+             ================================================== */}
 
           <View className="mt-7">
             <View className="mb-[14px]">
@@ -382,29 +514,91 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            <View className="items-center rounded-2xl border border-[#303030] bg-[#1A1A1A] px-5 py-[30px]">
-              <View className="h-[52px] w-[52px] items-center justify-center rounded-2xl bg-[#242424]">
-                <Ionicons
-                  name="receipt-outline"
-                  size={28}
-                  color="#777777"
-                />
+            {dashboard.ultimasVendas.length === 0 ? (
+              // ESTADO VAZIO
+
+              <View className="items-center rounded-2xl border border-[#303030] bg-[#1A1A1A] px-5 py-[30px]">
+                <View className="h-[52px] w-[52px] items-center justify-center rounded-2xl bg-[#242424]">
+                  <Ionicons
+                    name="receipt-outline"
+                    size={28}
+                    color="#777777"
+                  />
+                </View>
+
+                <Text className="mt-[14px] text-sm font-bold text-[#D6D6D6]">
+                  Nenhuma venda registrada
+                </Text>
+
+                <Text className="mt-[5px] text-center text-xs text-[#707070]">
+                  As vendas mais recentes aparecerão aqui.
+                </Text>
               </View>
+            ) : (
+              // LISTA DE VENDAS
 
-              <Text className="mt-[14px] text-sm font-bold text-[#D6D6D6]">
-                Nenhuma venda registrada
-              </Text>
+              <View className="overflow-hidden rounded-2xl border border-[#303030] bg-[#1A1A1A]">
+                {dashboard.ultimasVendas.map(
+                  (venda, index) => (
+                    <View
+                      key={venda.id}
+                      className={`flex-row items-center px-4 py-4 ${index <
+                        dashboard.ultimasVendas.length - 1
+                        ? 'border-b border-[#303030]'
+                        : ''
+                        }`}
+                    >
+                      {/* ÍCONE */}
 
-              <Text className="mt-[5px] text-center text-xs text-[#707070]">
-                As vendas mais recentes aparecerão aqui.
-              </Text>
-            </View>
+                      <View className="mr-3 h-11 w-11 items-center justify-center rounded-[13px] bg-[#242424]">
+                        <Ionicons
+                          name="receipt-outline"
+                          size={22}
+                          color="#D4AF37"
+                        />
+                      </View>
+
+                      {/* CLIENTE / DATA */}
+
+                      <View className="flex-1">
+                        <Text
+                          className="text-sm font-bold text-[#E8E8E8]"
+                          numberOfLines={1}
+                        >
+                          {venda.cliente}
+                        </Text>
+
+                        <Text className="mt-1 text-[11px] text-[#777777]">
+                          {formatarData(venda.data)}
+                        </Text>
+                      </View>
+
+                      {/* VALOR / STATUS */}
+
+                      <View className="ml-3 items-end">
+                        <Text className="text-sm font-bold text-white">
+                          {formatarMoeda(
+                            venda.valorTotal
+                          )}
+                        </Text>
+
+                        <Text className="mt-1 text-[10px] font-semibold text-salamandra-gold">
+                          {venda.status}
+                        </Text>
+                      </View>
+                    </View>
+                  )
+                )}
+              </View>
+            )}
           </View>
 
           <View className="h-5" />
         </ScrollView>
 
-        {/* NAVEGAÇÃO INFERIOR */}
+        {/* ==================================================
+                            NAVEGAÇÃO INFERIOR
+           ================================================== */}
 
         <View className="h-[72px] flex-row items-center justify-around border-t border-[#292929] bg-[#181818]">
           <Pressable className="flex-1 items-center justify-center">
