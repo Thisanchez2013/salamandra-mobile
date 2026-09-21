@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { COLORS } from '../constants/theme';
 import { supabase } from '../lib/supabase';
 
 export default function LoginScreen() {
@@ -26,29 +27,47 @@ export default function LoginScreen() {
   const router = useRouter();
 
   useEffect(() => {
-  verificarSessao();
-}, []);
+    verificarSessao();
+  }, []);
 
-async function verificarSessao() {
-  try {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
+  // ==================================================
+  // SESSÃO
+  // ==================================================
 
-    if (error) {
-      console.log('Erro ao verificar sessão:', error);
-      return;
+  async function verificarSessao() {
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        console.log(
+          'Erro ao verificar sessão:',
+          error
+        );
+
+        return;
+      }
+
+      if (session) {
+        console.log(
+          'Sessão encontrada. Redirecionando para Home.'
+        );
+
+        router.replace('/home');
+      }
+    } catch (error) {
+      console.log(
+        'Erro inesperado ao verificar sessão:',
+        error
+      );
     }
-
-    if (session) {
-      console.log('Sessão encontrada. Redirecionando para Home.');
-      router.replace('/home');
-    }
-  } catch (error) {
-    console.log('Erro inesperado ao verificar sessão:', error);
   }
-}
+
+  // ==================================================
+  // LOGIN
+  // ==================================================
 
   async function handleLogin() {
     let formularioValido = true;
@@ -77,26 +96,41 @@ async function verificarSessao() {
     setCarregando(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke(
-        'login-usuario',
-        {
-          body: {
-            usuario: usuario.trim().toLowerCase(),
-            senha,
-          },
-        }
-      );
+      const { data, error } =
+        await supabase.functions.invoke(
+          'login-usuario',
+          {
+            body: {
+              usuario: usuario
+                .trim()
+                .toLowerCase(),
+              senha,
+            },
+          }
+        );
 
       if (error) {
-        console.log('Erro ao chamar login:', error);
-        setErroSenha('Usuário ou senha inválidos.');
+        console.log(
+          'Erro ao chamar login:',
+          error
+        );
+
+        setErroSenha(
+          'Usuário ou senha inválidos.'
+        );
+
         return;
       }
 
-      if (!data?.access_token || !data?.refresh_token) {
+      if (
+        !data?.access_token ||
+        !data?.refresh_token
+      ) {
         setErroSenha(
-          data?.error || 'Usuário ou senha inválidos.'
+          data?.error ||
+            'Usuário ou senha inválidos.'
         );
+
         return;
       }
 
@@ -107,24 +141,52 @@ async function verificarSessao() {
         });
 
       if (sessionError) {
-        console.log('Erro ao criar sessão:', sessionError);
-        setErroSenha('Não foi possível iniciar a sessão.');
+        console.log(
+          'Erro ao criar sessão:',
+          sessionError
+        );
+
+        setErroSenha(
+          'Não foi possível iniciar a sessão.'
+        );
+
         return;
       }
 
-      console.log('Login realizado com sucesso!');
-      console.log('Usuário:', data.perfil?.usuario);
-      console.log('Nome:', data.perfil?.nome);
-      console.log('Perfil:', data.perfil?.perfil);
+      console.log(
+        'Login realizado com sucesso!'
+      );
+      console.log(
+        'Usuário:',
+        data.perfil?.usuario
+      );
+      console.log(
+        'Nome:',
+        data.perfil?.nome
+      );
+      console.log(
+        'Perfil:',
+        data.perfil?.perfil
+      );
 
       router.replace('/home');
     } catch (error) {
-      console.log('Erro inesperado no login:', error);
-      setErroSenha('Não foi possível realizar o login.');
+      console.log(
+        'Erro inesperado no login:',
+        error
+      );
+
+      setErroSenha(
+        'Não foi possível realizar o login.'
+      );
     } finally {
       setCarregando(false);
     }
   }
+
+  // ==================================================
+  // CAMPOS
+  // ==================================================
 
   function handleUsuarioChange(texto: string) {
     setUsuario(texto);
@@ -146,7 +208,11 @@ async function verificarSessao() {
     <SafeAreaView className="flex-1 bg-salamandra-background">
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={
+          Platform.OS === 'ios'
+            ? 'padding'
+            : undefined
+        }
       >
         <ScrollView
           className="flex-1"
@@ -157,94 +223,111 @@ async function verificarSessao() {
           <View className="min-h-full flex-1 justify-between px-7 py-10">
 
             {/* ==================================================
-                MARCA
-            ================================================== */}
+                                MARCA
+               ================================================== */}
 
             <View className="mt-[30px] items-center">
               <Text className="text-[32px] font-bold tracking-[3px] text-salamandra-gold">
                 SALAMANDRA
               </Text>
 
-              <Text className="mt-1.5 text-[15px] text-[#AFAFAF]">
+              <Text className="mt-1.5 text-[15px] text-salamandra-brandSubtitle">
                 Sistema de Gestão
               </Text>
             </View>
 
             {/* ==================================================
-                LOGIN
-            ================================================== */}
+                                LOGIN
+               ================================================== */}
 
             <View className="w-full">
-              <Text className="text-[27px] font-bold text-white">
+              <Text className="text-[27px] font-bold text-salamandra-text">
                 Bem-vindo de volta
               </Text>
 
               <Text className="mb-[30px] mt-2 text-[15px] leading-[22px] text-salamandra-muted">
-                Entre com suas credenciais para acessar o sistema.
+                Entre com suas credenciais para
+                acessar o sistema.
               </Text>
 
               {/* ==================================================
-                  USUÁRIO
-              ================================================== */}
+                                  USUÁRIO
+                 ================================================== */}
 
               <View className="mb-5">
-                <Text className="mb-2 text-sm font-semibold text-[#D6D6D6]">
+                <Text className="mb-2 text-sm font-semibold text-salamandra-textSoft">
                   Usuário
                 </Text>
 
                 <TextInput
-                  className={`h-[54px] rounded-xl border bg-salamandra-card px-4 text-base text-white ${erroUsuario
-                    ? 'border-[#C94C4C]'
-                    : 'border-salamandra-border'
-                    }`}
+                  className={`h-[54px] rounded-xl border bg-salamandra-card px-4 text-base text-salamandra-text ${
+                    erroUsuario
+                      ? 'border-salamandra-errorBorder'
+                      : 'border-salamandra-border'
+                  }`}
                   placeholder="Digite seu usuário"
-                  placeholderTextColor="#777777"
+                  placeholderTextColor={
+                    COLORS.subtle
+                  }
                   value={usuario}
-                  onChangeText={handleUsuarioChange}
+                  onChangeText={
+                    handleUsuarioChange
+                  }
                   autoCapitalize="none"
                   autoCorrect={false}
                   returnKeyType="next"
                 />
 
                 {erroUsuario ? (
-                  <Text className="mt-[7px] text-xs text-[#E57373]">
+                  <Text className="mt-[7px] text-xs text-salamandra-error">
                     {erroUsuario}
                   </Text>
                 ) : null}
               </View>
 
               {/* ==================================================
-                  SENHA
-              ================================================== */}
+                                  SENHA
+                 ================================================== */}
 
               <View className="mb-5">
-                <Text className="mb-2 text-sm font-semibold text-[#D6D6D6]">
+                <Text className="mb-2 text-sm font-semibold text-salamandra-textSoft">
                   Senha
                 </Text>
 
                 <View
-                  className={`h-[54px] flex-row items-center rounded-xl border bg-salamandra-card ${erroSenha
-                    ? 'border-[#C94C4C]'
-                    : 'border-salamandra-border'
-                    }`}
+                  className={`h-[54px] flex-row items-center rounded-xl border bg-salamandra-card ${
+                    erroSenha
+                      ? 'border-salamandra-errorBorder'
+                      : 'border-salamandra-border'
+                  }`}
                 >
                   <TextInput
-                    className="h-full flex-1 px-4 text-base text-white"
+                    className="h-full flex-1 px-4 text-base text-salamandra-text"
                     placeholder="Digite sua senha"
-                    placeholderTextColor="#777777"
+                    placeholderTextColor={
+                      COLORS.subtle
+                    }
                     value={senha}
-                    onChangeText={handleSenhaChange}
-                    secureTextEntry={!mostrarSenha}
+                    onChangeText={
+                      handleSenhaChange
+                    }
+                    secureTextEntry={
+                      !mostrarSenha
+                    }
                     autoCapitalize="none"
                     autoCorrect={false}
                     returnKeyType="done"
-                    onSubmitEditing={handleLogin}
+                    onSubmitEditing={
+                      handleLogin
+                    }
                   />
 
                   <Pressable
                     className="h-full justify-center px-4 active:opacity-70"
                     onPress={() =>
-                      setMostrarSenha(!mostrarSenha)
+                      setMostrarSenha(
+                        !mostrarSenha
+                      )
                     }
                     hitSlop={10}
                   >
@@ -255,39 +338,44 @@ async function verificarSessao() {
                           : 'eye-outline'
                       }
                       size={22}
-                      color="#D4AF37"
+                      color={COLORS.gold}
                     />
                   </Pressable>
                 </View>
 
                 {erroSenha ? (
-                  <Text className="mt-[7px] text-xs text-[#E57373]">
+                  <Text className="mt-[7px] text-xs text-salamandra-error">
                     {erroSenha}
                   </Text>
                 ) : null}
               </View>
 
               {/* ==================================================
-                  BOTÃO ENTRAR
-              ================================================== */}
+                                BOTÃO ENTRAR
+                 ================================================== */}
 
               <Pressable
-                className={`mt-2.5 h-14 items-center justify-center rounded-xl bg-salamandra-gold ${carregando ? 'opacity-60' : 'active:opacity-80'
-                  }`}
+                className={`mt-2.5 h-14 items-center justify-center rounded-xl bg-salamandra-gold ${
+                  carregando
+                    ? 'opacity-60'
+                    : 'active:opacity-80'
+                }`}
                 onPress={handleLogin}
                 disabled={carregando}
               >
                 <Text className="text-[15px] font-extrabold tracking-[1px] text-salamandra-background">
-                  {carregando ? 'ENTRANDO...' : 'ENTRAR'}
+                  {carregando
+                    ? 'ENTRANDO...'
+                    : 'ENTRAR'}
                 </Text>
               </Pressable>
             </View>
 
             {/* ==================================================
-                RODAPÉ
-            ================================================== */}
+                                RODAPÉ
+               ================================================== */}
 
-            <Text className="mt-10 text-center text-xs text-[#666666]">
+            <Text className="mt-10 text-center text-xs text-salamandra-footer">
               Salamandra Mobile
             </Text>
           </View>

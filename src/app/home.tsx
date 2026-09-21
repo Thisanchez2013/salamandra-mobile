@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { COLORS } from '../constants/theme';
 import { supabase } from '../lib/supabase';
 import {
   buscarDadosDashboard,
@@ -31,6 +32,7 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const [nomeUsuario, setNomeUsuario] = useState('');
+
   const [dashboard, setDashboard] =
     useState<DashboardDados>(dadosIniciais);
 
@@ -98,6 +100,7 @@ export default function HomeScreen() {
           'Erro ao carregar perfil:',
           perfilError
         );
+
         return;
       }
 
@@ -139,8 +142,7 @@ export default function HomeScreen() {
         'Erro ao carregar dados',
         'Não foi possível atualizar o Dashboard. Tente novamente.'
       );
-    }
-    finally {
+    } finally {
       setCarregandoDashboard(false);
     }
   }
@@ -180,13 +182,17 @@ export default function HomeScreen() {
         {
           text: 'Sair',
           style: 'destructive',
+
           onPress: async () => {
             try {
               const { error } =
                 await supabase.auth.signOut();
 
               if (error) {
-                console.log('Erro ao sair:', error);
+                console.log(
+                  'Erro ao sair:',
+                  error
+                );
 
                 Alert.alert(
                   'Erro',
@@ -225,11 +231,12 @@ export default function HomeScreen() {
             <RefreshControl
               refreshing={atualizando}
               onRefresh={atualizarDashboard}
-              tintColor="#D4AF37"
-              colors={['#D4AF37']}
+              tintColor={COLORS.gold}
+              colors={[COLORS.gold]}
             />
           }
         >
+
           {/* ==================================================
                               CABEÇALHO
              ================================================== */}
@@ -240,7 +247,7 @@ export default function HomeScreen() {
                 SALAMANDRA
               </Text>
 
-              <Text className="mt-[3px] text-[11px] text-[#777777]">
+              <Text className="mt-[3px] text-[11px] text-salamandra-subtle">
                 Sistema de Gestão
               </Text>
             </View>
@@ -252,7 +259,7 @@ export default function HomeScreen() {
               <Ionicons
                 name="person-outline"
                 size={22}
-                color="#D4AF37"
+                color={COLORS.gold}
               />
             </Pressable>
           </View>
@@ -262,7 +269,7 @@ export default function HomeScreen() {
              ================================================== */}
 
           <View className="mb-6 mt-[34px]">
-            <Text className="text-[25px] font-bold text-white">
+            <Text className="text-[25px] font-bold text-salamandra-text">
               Bom dia
               {nomeUsuario ? `, ${nomeUsuario}` : ''} 👋
             </Text>
@@ -287,28 +294,30 @@ export default function HomeScreen() {
                   <View className="mt-3 h-[36px] justify-center">
                     <ActivityIndicator
                       size="small"
-                      color="#D4AF37"
+                      color={COLORS.gold}
                     />
                   </View>
                 ) : (
-                  <Text className="mt-2 text-[30px] font-extrabold text-white">
-                    {formatarMoeda(dashboard.faturamento)}
+                  <Text className="mt-2 text-[30px] font-extrabold text-salamandra-text">
+                    {formatarMoeda(
+                      dashboard.faturamento
+                    )}
                   </Text>
                 )}
               </View>
 
-              <View className="h-12 w-12 items-center justify-center rounded-[14px] bg-[#272727]">
+              <View className="h-12 w-12 items-center justify-center rounded-[14px] bg-salamandra-surfaceLight">
                 <Ionicons
                   name="cash-outline"
                   size={24}
-                  color="#D4AF37"
+                  color={COLORS.gold}
                 />
               </View>
             </View>
 
-            <View className="my-4 h-px bg-[#303030]" />
+            <View className="my-4 h-px bg-salamandra-border" />
 
-            <Text className="text-xs text-[#777777]">
+            <Text className="text-xs text-salamandra-subtle">
               Vendas realizadas no período
             </Text>
           </View>
@@ -321,96 +330,96 @@ export default function HomeScreen() {
 
             {/* VENDAS */}
 
-            <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
+            <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-salamandra-border bg-salamandra-card p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
                   name="cart-outline"
                   size={22}
-                  color="#D4AF37"
+                  color={COLORS.gold}
                 />
 
-                <Text className="text-[25px] font-extrabold text-white">
+                <Text className="text-[25px] font-extrabold text-salamandra-text">
                   {dashboard.quantidadeVendas}
                 </Text>
               </View>
 
-              <Text className="mt-[18px] text-sm font-bold text-[#E8E8E8]">
+              <Text className="mt-[18px] text-sm font-bold text-salamandra-textSecondary">
                 Vendas
               </Text>
 
-              <Text className="mt-1 text-[11px] text-[#707070]">
+              <Text className="mt-1 text-[11px] text-salamandra-disabled">
                 Realizadas
               </Text>
             </View>
 
             {/* PRODUTOS */}
 
-            <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
+            <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-salamandra-border bg-salamandra-card p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
                   name="cube-outline"
                   size={22}
-                  color="#D4AF37"
+                  color={COLORS.gold}
                 />
 
-                <Text className="text-[25px] font-extrabold text-white">
+                <Text className="text-[25px] font-extrabold text-salamandra-text">
                   {dashboard.quantidadeProdutos}
                 </Text>
               </View>
 
-              <Text className="mt-[18px] text-sm font-bold text-[#E8E8E8]">
+              <Text className="mt-[18px] text-sm font-bold text-salamandra-textSecondary">
                 Produtos
               </Text>
 
-              <Text className="mt-1 text-[11px] text-[#707070]">
+              <Text className="mt-1 text-[11px] text-salamandra-disabled">
                 Cadastrados
               </Text>
             </View>
 
             {/* CLIENTES */}
 
-            <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
+            <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-salamandra-border bg-salamandra-card p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
                   name="people-outline"
                   size={22}
-                  color="#D4AF37"
+                  color={COLORS.gold}
                 />
 
-                <Text className="text-[25px] font-extrabold text-white">
+                <Text className="text-[25px] font-extrabold text-salamandra-text">
                   {dashboard.quantidadeClientes}
                 </Text>
               </View>
 
-              <Text className="mt-[18px] text-sm font-bold text-[#E8E8E8]">
+              <Text className="mt-[18px] text-sm font-bold text-salamandra-textSecondary">
                 Clientes
               </Text>
 
-              <Text className="mt-1 text-[11px] text-[#707070]">
+              <Text className="mt-1 text-[11px] text-salamandra-disabled">
                 Cadastrados
               </Text>
             </View>
 
             {/* ESTOQUE BAIXO */}
 
-            <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-[#303030] bg-[#1A1A1A] p-4">
+            <View className="mb-3 min-h-[135px] w-[48.5%] rounded-2xl border border-salamandra-border bg-salamandra-card p-4">
               <View className="flex-row items-center justify-between">
                 <Ionicons
                   name="warning-outline"
                   size={22}
-                  color="#D4AF37"
+                  color={COLORS.gold}
                 />
 
-                <Text className="text-[25px] font-extrabold text-white">
+                <Text className="text-[25px] font-extrabold text-salamandra-text">
                   {dashboard.estoqueBaixo}
                 </Text>
               </View>
 
-              <Text className="mt-[18px] text-sm font-bold text-[#E8E8E8]">
+              <Text className="mt-[18px] text-sm font-bold text-salamandra-textSecondary">
                 Estoque baixo
               </Text>
 
-              <Text className="mt-1 text-[11px] text-[#707070]">
+              <Text className="mt-1 text-[11px] text-salamandra-disabled">
                 Produtos
               </Text>
             </View>
@@ -422,11 +431,11 @@ export default function HomeScreen() {
 
           <View className="mt-7">
             <View className="mb-[14px]">
-              <Text className="text-lg font-bold text-white">
+              <Text className="text-lg font-bold text-salamandra-text">
                 Ações rápidas
               </Text>
 
-              <Text className="mt-1 text-xs text-[#777777]">
+              <Text className="mt-1 text-xs text-salamandra-subtle">
                 Acesse as principais funções do sistema
               </Text>
             </View>
@@ -440,11 +449,11 @@ export default function HomeScreen() {
                   <Ionicons
                     name="cart-outline"
                     size={22}
-                    color="#121212"
+                    color={COLORS.background}
                   />
                 </View>
 
-                <Text className="flex-shrink text-[13px] font-bold text-[#E8E8E8]">
+                <Text className="flex-shrink text-[13px] font-bold text-salamandra-textSecondary">
                   Nova venda
                 </Text>
               </Pressable>
@@ -456,11 +465,11 @@ export default function HomeScreen() {
                   <Ionicons
                     name="cube-outline"
                     size={22}
-                    color="#121212"
+                    color={COLORS.background}
                   />
                 </View>
 
-                <Text className="flex-shrink text-[13px] font-bold text-[#E8E8E8]">
+                <Text className="flex-shrink text-[13px] font-bold text-salamandra-textSecondary">
                   Produtos
                 </Text>
               </Pressable>
@@ -472,11 +481,11 @@ export default function HomeScreen() {
                   <Ionicons
                     name="people-outline"
                     size={22}
-                    color="#121212"
+                    color={COLORS.background}
                   />
                 </View>
 
-                <Text className="flex-shrink text-[13px] font-bold text-[#E8E8E8]">
+                <Text className="flex-shrink text-[13px] font-bold text-salamandra-textSecondary">
                   Clientes
                 </Text>
               </Pressable>
@@ -488,11 +497,11 @@ export default function HomeScreen() {
                   <Ionicons
                     name="file-tray-stacked-outline"
                     size={22}
-                    color="#121212"
+                    color={COLORS.background}
                   />
                 </View>
 
-                <Text className="flex-shrink text-[13px] font-bold text-[#E8E8E8]">
+                <Text className="flex-shrink text-[13px] font-bold text-salamandra-textSecondary">
                   Estoque
                 </Text>
               </Pressable>
@@ -505,56 +514,60 @@ export default function HomeScreen() {
 
           <View className="mt-7">
             <View className="mb-[14px]">
-              <Text className="text-lg font-bold text-white">
+              <Text className="text-lg font-bold text-salamandra-text">
                 Últimas vendas
               </Text>
 
-              <Text className="mt-1 text-xs text-[#777777]">
+              <Text className="mt-1 text-xs text-salamandra-subtle">
                 Movimentações mais recentes
               </Text>
             </View>
 
             {dashboard.ultimasVendas.length === 0 ? (
+
               // ESTADO VAZIO
 
-              <View className="items-center rounded-2xl border border-[#303030] bg-[#1A1A1A] px-5 py-[30px]">
-                <View className="h-[52px] w-[52px] items-center justify-center rounded-2xl bg-[#242424]">
+              <View className="items-center rounded-2xl border border-salamandra-border bg-salamandra-card px-5 py-[30px]">
+                <View className="h-[52px] w-[52px] items-center justify-center rounded-2xl bg-salamandra-surface">
                   <Ionicons
                     name="receipt-outline"
                     size={28}
-                    color="#777777"
+                    color={COLORS.subtle}
                   />
                 </View>
 
-                <Text className="mt-[14px] text-sm font-bold text-[#D6D6D6]">
+                <Text className="mt-[14px] text-sm font-bold text-salamandra-textSoft">
                   Nenhuma venda registrada
                 </Text>
 
-                <Text className="mt-[5px] text-center text-xs text-[#707070]">
+                <Text className="mt-[5px] text-center text-xs text-salamandra-disabled">
                   As vendas mais recentes aparecerão aqui.
                 </Text>
               </View>
             ) : (
+
               // LISTA DE VENDAS
 
-              <View className="overflow-hidden rounded-2xl border border-[#303030] bg-[#1A1A1A]">
+              <View className="overflow-hidden rounded-2xl border border-salamandra-border bg-salamandra-card">
                 {dashboard.ultimasVendas.map(
                   (venda, index) => (
                     <View
                       key={venda.id}
-                      className={`flex-row items-center px-4 py-4 ${index <
+                      className={`flex-row items-center px-4 py-4 ${
+                        index <
                         dashboard.ultimasVendas.length - 1
-                        ? 'border-b border-[#303030]'
-                        : ''
-                        }`}
+                          ? 'border-b border-salamandra-border'
+                          : ''
+                      }`}
                     >
+
                       {/* ÍCONE */}
 
-                      <View className="mr-3 h-11 w-11 items-center justify-center rounded-[13px] bg-[#242424]">
+                      <View className="mr-3 h-11 w-11 items-center justify-center rounded-[13px] bg-salamandra-surface">
                         <Ionicons
                           name="receipt-outline"
                           size={22}
-                          color="#D4AF37"
+                          color={COLORS.gold}
                         />
                       </View>
 
@@ -562,13 +575,13 @@ export default function HomeScreen() {
 
                       <View className="flex-1">
                         <Text
-                          className="text-sm font-bold text-[#E8E8E8]"
+                          className="text-sm font-bold text-salamandra-textSecondary"
                           numberOfLines={1}
                         >
                           {venda.cliente}
                         </Text>
 
-                        <Text className="mt-1 text-[11px] text-[#777777]">
+                        <Text className="mt-1 text-[11px] text-salamandra-subtle">
                           {formatarData(venda.data)}
                         </Text>
                       </View>
@@ -576,7 +589,7 @@ export default function HomeScreen() {
                       {/* VALOR / STATUS */}
 
                       <View className="ml-3 items-end">
-                        <Text className="text-sm font-bold text-white">
+                        <Text className="text-sm font-bold text-salamandra-text">
                           {formatarMoeda(
                             venda.valorTotal
                           )}
@@ -600,12 +613,15 @@ export default function HomeScreen() {
                             NAVEGAÇÃO INFERIOR
            ================================================== */}
 
-        <View className="h-[72px] flex-row items-center justify-around border-t border-[#292929] bg-[#181818]">
+        <View className="h-[72px] flex-row items-center justify-around border-t border-salamandra-borderSoft bg-salamandra-navigation">
+
+          {/* INÍCIO */}
+
           <Pressable className="flex-1 items-center justify-center">
             <Ionicons
               name="home"
               size={23}
-              color="#D4AF37"
+              color={COLORS.gold}
             />
 
             <Text className="mt-1 text-[10px] font-bold text-salamandra-gold">
@@ -613,26 +629,30 @@ export default function HomeScreen() {
             </Text>
           </Pressable>
 
+          {/* RELATÓRIOS */}
+
           <Pressable className="flex-1 items-center justify-center">
             <Ionicons
               name="bar-chart-outline"
               size={23}
-              color="#777777"
+              color={COLORS.subtle}
             />
 
-            <Text className="mt-1 text-[10px] font-semibold text-[#777777]">
+            <Text className="mt-1 text-[10px] font-semibold text-salamandra-subtle">
               Relatórios
             </Text>
           </Pressable>
+
+          {/* MENU */}
 
           <Pressable className="flex-1 items-center justify-center">
             <Ionicons
               name="menu-outline"
               size={25}
-              color="#777777"
+              color={COLORS.subtle}
             />
 
-            <Text className="mt-1 text-[10px] font-semibold text-[#777777]">
+            <Text className="mt-1 text-[10px] font-semibold text-salamandra-subtle">
               Menu
             </Text>
           </Pressable>
