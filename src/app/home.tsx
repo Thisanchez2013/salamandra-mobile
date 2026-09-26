@@ -444,17 +444,20 @@ export default function HomeScreen() {
 
               {/* NOVA VENDA */}
 
-              <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70">
+              <Pressable
+                className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70"
+                onPress={() => router.push('/clientes')}
+              >
                 <View className="mr-[11px] h-9 w-9 items-center justify-center rounded-[10px] bg-salamandra-gold">
                   <Ionicons
-                    name="cart-outline"
+                    name="people-outline"
                     size={22}
                     color={COLORS.background}
                   />
                 </View>
 
                 <Text className="flex-shrink text-[13px] font-bold text-salamandra-textSecondary">
-                  Nova venda
+                  Clientes
                 </Text>
               </Pressable>
 
@@ -553,12 +556,11 @@ export default function HomeScreen() {
                   (venda, index) => (
                     <View
                       key={venda.id}
-                      className={`flex-row items-center px-4 py-4 ${
-                        index <
-                        dashboard.ultimasVendas.length - 1
+                      className={`flex-row items-center px-4 py-4 ${index <
+                          dashboard.ultimasVendas.length - 1
                           ? 'border-b border-salamandra-border'
                           : ''
-                      }`}
+                        }`}
                     >
 
                       {/* ÍCONE */}
