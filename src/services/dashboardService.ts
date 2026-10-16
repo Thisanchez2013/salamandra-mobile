@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { contarProdutosComEstoqueBaixo } from './produtoService';
 
 // ==================================================
 // TIPOS
@@ -105,20 +106,7 @@ export async function buscarDadosDashboard(): Promise<DashboardDados> {
     // Consideramos estoque <= 10 por enquanto.
     // ==================================================
 
-    const {
-      count: estoqueBaixo,
-      error: estoqueError,
-    } = await supabase
-      .from('produtos')
-      .select('*', {
-        count: 'exact',
-        head: true,
-      })
-      .lte('quantidade_estoque', 10);
-
-    if (estoqueError) {
-      throw estoqueError;
-    }
+    const estoqueBaixo = await contarProdutosComEstoqueBaixo();
 
     // ==================================================
     // ÚLTIMAS VENDAS
@@ -165,7 +153,7 @@ export async function buscarDadosDashboard(): Promise<DashboardDados> {
       quantidadeVendas: quantidadeVendas ?? 0,
       quantidadeProdutos: quantidadeProdutos ?? 0,
       quantidadeClientes: quantidadeClientes ?? 0,
-      estoqueBaixo: estoqueBaixo ?? 0,
+      estoqueBaixo,
       ultimasVendas,
     };
   } catch (error) {

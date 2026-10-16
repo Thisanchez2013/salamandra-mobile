@@ -237,6 +237,12 @@ export default function ClientesScreen() {
                 <ClienteCard
                   key={cliente.id}
                   cliente={cliente}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/novo-cliente',
+                      params: { id: cliente.id },
+                    })
+                  }
                 />
               ))}
             </View>

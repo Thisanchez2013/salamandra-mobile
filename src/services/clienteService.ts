@@ -94,3 +94,71 @@ export async function cadastrarCliente(
     throw error;
   }
 }
+
+export async function buscarClientePorId(
+  id: string
+): Promise<Cliente | null> {
+  const { data, error } = await supabase
+    .from('clientes')
+    .select(`
+      id,
+      nome,
+      email,
+      cpf,
+      rua,
+      numero,
+      bairro,
+      cidade,
+      estado,
+      cep,
+      data_cadastro
+    `)
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function atualizarCliente(
+  id: string,
+  cliente: ClienteFormData
+): Promise<Cliente> {
+  const { data, error } = await supabase
+    .from('clientes')
+    .update({
+      nome: cliente.nome.trim(),
+      cpf: cliente.cpf.replace(/\D/g, ''),
+      email: cliente.email.trim() || null,
+      rua: cliente.rua.trim() || null,
+      numero: cliente.numero.trim() || null,
+      bairro: cliente.bairro.trim() || null,
+      cidade: cliente.cidade.trim() || null,
+      estado: cliente.estado.trim().toUpperCase() || null,
+      cep: cliente.cep.replace(/\D/g, '') || null,
+    })
+    .eq('id', id)
+    .select(`
+      id,
+      nome,
+      email,
+      cpf,
+      rua,
+      numero,
+      bairro,
+      cidade,
+      estado,
+      cep,
+      data_cadastro
+    `)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 
-import { cadastrarCliente } from '../services/clienteService';
+import {
+  atualizarCliente,
+  cadastrarCliente,
+} from '../services/clienteService';
 import { ClienteFormData } from '../types/cliente';
 
 export function useNovoCliente() {
@@ -10,13 +13,18 @@ export function useNovoCliente() {
   );
 
   async function salvarCliente(
-    cliente: ClienteFormData
+    cliente: ClienteFormData,
+    id?: string
   ): Promise<boolean> {
     try {
       setSalvando(true);
       setErroCadastro(null);
 
-      await cadastrarCliente(cliente);
+      if (id) {
+        await atualizarCliente(id, cliente);
+      } else {
+        await cadastrarCliente(cliente);
+      }
 
       return true;
     } catch (error: any) {

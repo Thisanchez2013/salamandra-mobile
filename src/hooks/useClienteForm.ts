@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import {
   ClienteFormData,
@@ -95,10 +95,15 @@ export function useClienteForm() {
   // LIMPAR FORMULÁRIO
   // ==================================================
 
-  function resetForm() {
+  const resetForm = useCallback(() => {
     setFormData(INITIAL_FORM_DATA);
     setErrors({});
-  }
+  }, []);
+
+  const preencherForm = useCallback((dados: ClienteFormData) => {
+    setFormData(dados);
+    setErrors({});
+  }, []);
 
   return {
     formData,
@@ -106,5 +111,6 @@ export function useClienteForm() {
     updateField,
     validateForm,
     resetForm,
+    preencherForm,
   };
 }

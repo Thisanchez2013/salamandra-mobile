@@ -463,7 +463,7 @@ export default function HomeScreen() {
 
               {/* PRODUTOS */}
 
-              <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70">
+              <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70" onPress={() => router.push('/produtos')}>
                 <View className="mr-[11px] h-9 w-9 items-center justify-center rounded-[10px] bg-salamandra-gold">
                   <Ionicons
                     name="cube-outline"
@@ -495,7 +495,7 @@ export default function HomeScreen() {
 
               {/* ESTOQUE */}
 
-              <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70">
+              <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70" onPress={() => router.push('/produtos')}>
                 <View className="mr-[11px] h-9 w-9 items-center justify-center rounded-[10px] bg-salamandra-gold">
                   <Ionicons
                     name="file-tray-stacked-outline"
