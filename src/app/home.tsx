@@ -19,6 +19,21 @@ import {
   DashboardDados,
 } from '../services/dashboardService';
 
+// Saudação de acordo com o horário do celular.
+function obterSaudacao() {
+  const hora = new Date().getHours();
+
+  if (hora >= 5 && hora < 12) {
+    return 'Bom dia';
+  }
+
+  if (hora >= 12 && hora < 18) {
+    return 'Boa tarde';
+  }
+
+  return 'Boa noite';
+}
+
 const dadosIniciais: DashboardDados = {
   faturamento: 0,
   quantidadeVendas: 0,
@@ -170,60 +185,6 @@ export default function HomeScreen() {
     });
   }
 
-  // ==================================================
-  // LOGOUT
-  // ==================================================
-
-  function handleLogout() {
-    Alert.alert(
-      'Sair do sistema',
-      'Deseja realmente sair da sua conta?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Sair',
-          style: 'destructive',
-
-          onPress: async () => {
-            try {
-              const { error } =
-                await supabase.auth.signOut();
-
-              if (error) {
-                console.log(
-                  'Erro ao sair:',
-                  error
-                );
-
-                Alert.alert(
-                  'Erro',
-                  'Não foi possível sair da sua conta.'
-                );
-
-                return;
-              }
-
-              router.replace('/');
-            } catch (error) {
-              console.log(
-                'Erro inesperado ao sair:',
-                error
-              );
-
-              Alert.alert(
-                'Erro',
-                'Não foi possível sair da sua conta.'
-              );
-            }
-          },
-        },
-      ]
-    );
-  }
-
   return (
     <SafeAreaView className="flex-1 bg-salamandra-background">
       <View className="flex-1 bg-salamandra-background">
@@ -258,7 +219,9 @@ export default function HomeScreen() {
 
             <Pressable
               className="h-11 w-11 items-center justify-center rounded-[14px] border border-salamandra-border bg-salamandra-card active:opacity-70"
-              onPress={handleLogout}
+              onPress={() => router.push('/menu')}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir menu do usuário"
             >
               <Ionicons
                 name="person-outline"
@@ -274,7 +237,7 @@ export default function HomeScreen() {
 
           <View className="mb-6 mt-[34px]">
             <Text className="text-[25px] font-bold text-salamandra-text">
-              Bom dia
+              {obterSaudacao()}
               {nomeUsuario ? `, ${nomeUsuario}` : ''} 👋
             </Text>
 
@@ -642,7 +605,17 @@ export default function HomeScreen() {
 
           {/* RELATÓRIOS */}
 
-          <Pressable className="flex-1 items-center justify-center">
+          <Pressable
+            className="flex-1 items-center justify-center active:opacity-70"
+            onPress={() =>
+              Alert.alert(
+                'Em breve',
+                'Os relatórios ainda estão em desenvolvimento.'
+              )
+            }
+            accessibilityRole="button"
+            accessibilityLabel="Relatórios"
+          >
             <Ionicons
               name="bar-chart-outline"
               size={23}
@@ -656,7 +629,12 @@ export default function HomeScreen() {
 
           {/* MENU */}
 
-          <Pressable className="flex-1 items-center justify-center">
+          <Pressable
+            className="flex-1 items-center justify-center active:opacity-70"
+            onPress={() => router.push('/menu')}
+            accessibilityRole="button"
+            accessibilityLabel="Menu"
+          >
             <Ionicons
               name="menu-outline"
               size={25}
