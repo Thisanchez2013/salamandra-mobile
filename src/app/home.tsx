@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -41,9 +41,13 @@ export default function HomeScreen() {
   const [carregandoDashboard, setCarregandoDashboard] =
     useState(true);
 
-  useEffect(() => {
-    carregarHome();
-  }, []);
+  // Recarrega sempre que a Home volta a ficar visível,
+  // para refletir clientes, produtos e lotes recém-cadastrados.
+  useFocusEffect(
+    useCallback(() => {
+      carregarHome();
+    }, [])
+  );
 
   // ==================================================
   // CARREGAMENTO DA HOME
@@ -446,18 +450,23 @@ export default function HomeScreen() {
 
               <Pressable
                 className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70"
-                onPress={() => router.push('/clientes')}
+                onPress={() =>
+                  Alert.alert(
+                    'Em breve',
+                    'O módulo de vendas ainda está em desenvolvimento.'
+                  )
+                }
               >
                 <View className="mr-[11px] h-9 w-9 items-center justify-center rounded-[10px] bg-salamandra-gold">
                   <Ionicons
-                    name="people-outline"
+                    name="cart-outline"
                     size={22}
                     color={COLORS.background}
                   />
                 </View>
 
                 <Text className="flex-shrink text-[13px] font-bold text-salamandra-textSecondary">
-                  Clientes
+                  Nova venda
                 </Text>
               </Pressable>
 
@@ -479,7 +488,7 @@ export default function HomeScreen() {
 
               {/* CLIENTES */}
 
-              <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70">
+              <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70" onPress={() => router.push('/clientes')}>
                 <View className="mr-[11px] h-9 w-9 items-center justify-center rounded-[10px] bg-salamandra-gold">
                   <Ionicons
                     name="people-outline"

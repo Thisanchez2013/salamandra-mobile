@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { buscarClientes } from '../services/clienteService';
 import { Cliente } from '../types/cliente';
+import { somenteNumeros } from '../utils/validators';
 
 export function useClientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -55,16 +56,22 @@ export function useClientes() {
       return clientes;
     }
 
+    // O CPF é salvo só com números, então a busca
+    // ignora pontos e traços digitados pelo usuário.
+    const termoCpf = somenteNumeros(termo);
+
     return clientes.filter((cliente) => {
       const nome =
         cliente.nome.toLowerCase();
 
-      const cpf =
-        cliente.cpf ?? '';
+      const cpf = somenteNumeros(
+        cliente.cpf ?? ''
+      );
 
       return (
         nome.includes(termo) ||
-        cpf.includes(termo)
+        (termoCpf.length > 0 &&
+          cpf.includes(termoCpf))
       );
     });
   }, [clientes, pesquisa]);
