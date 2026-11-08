@@ -341,6 +341,13 @@ export default function MenuScreen() {
           onPress={() => router.push('/vendas')}
         />
 
+        <ItemMenu
+          icon="bar-chart-outline"
+          titulo="Relatórios"
+          descricao="Faturamento, mais vendidos e estoque"
+          onPress={() => router.push('/relatorios')}
+        />
+
         {/* ==================================================
                                 CONTA
            ================================================== */}

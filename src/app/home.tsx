@@ -630,12 +630,7 @@ export default function HomeScreen() {
 
           <Pressable
             className="flex-1 items-center justify-center active:opacity-70"
-            onPress={() =>
-              Alert.alert(
-                'Em breve',
-                'Os relatórios ainda estão em desenvolvimento.'
-              )
-            }
+            onPress={() => router.push('/relatorios')}
             accessibilityRole="button"
             accessibilityLabel="Relatórios"
           >
