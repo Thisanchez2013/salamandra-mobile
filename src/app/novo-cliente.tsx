@@ -17,6 +17,7 @@ import { AppHeader } from '../components/ui/AppHeader';
 import { BotaoExcluir } from '../components/ui/BotaoExcluir';
 import { FormInput } from '../components/ui/FormInput';
 import { COLORS } from '../constants/theme';
+import { useBuscaCep } from '../hooks/useBuscaCep';
 import { useClienteForm } from '../hooks/useClienteForm';
 import { useNovoCliente } from '../hooks/useNovoCliente';
 import { usePermissoes } from '../hooks/usePermissoes';
@@ -52,6 +53,24 @@ export default function NovoClienteScreen() {
     salvando,
     erroCadastro,
   } = useNovoCliente();
+
+  // API externa ViaCEP: com o CEP completo, preenche o endereço sozinho.
+  const preencherEndereco = useCallback(
+    (endereco: { rua: string; bairro: string; cidade: string; estado: string }) => {
+      updateField('rua', endereco.rua);
+      updateField('bairro', endereco.bairro);
+      updateField('cidade', endereco.cidade);
+      updateField('estado', endereco.estado.toUpperCase());
+    },
+    [updateField]
+  );
+
+  const {
+    buscando: buscandoCep,
+    erroCep,
+    encontrado: cepEncontrado,
+    aoMudarCep,
+  } = useBuscaCep(preencherEndereco);
 
   const carregarCliente = useCallback(async () => {
     if (!id) {
@@ -259,12 +278,41 @@ export default function NovoClienteScreen() {
                 label="CEP"
                 placeholder="00000-000"
                 value={formData.cep}
-                onChangeText={(value) => updateField('cep', maskCEP(value))}
-                error={errors.cep}
+                onChangeText={(value) => {
+                  const cep = maskCEP(value);
+                  updateField('cep', cep);
+                  aoMudarCep(cep);
+                }}
+                error={errors.cep ?? erroCep ?? undefined}
                 keyboardType="numeric"
                 maxLength={9}
                 returnKeyType="next"
               />
+
+              {buscandoCep ? (
+                <View className="-mt-2 mb-4 flex-row items-center">
+                  <ActivityIndicator
+                    size="small"
+                    color={COLORS.gold}
+                  />
+
+                  <Text className="ml-2 text-[11px] text-salamandra-muted">
+                    Buscando endereço na ViaCEP...
+                  </Text>
+                </View>
+              ) : cepEncontrado ? (
+                <View className="-mt-2 mb-4 flex-row items-center">
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={16}
+                    color={COLORS.gold}
+                  />
+
+                  <Text className="ml-2 text-[11px] text-salamandra-gold">
+                    Endereço preenchido pela ViaCEP. Confira e informe o número.
+                  </Text>
+                </View>
+              ) : null}
 
               <FormInput
                 label="Rua"
