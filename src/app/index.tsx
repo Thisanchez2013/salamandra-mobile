@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -23,47 +22,6 @@ export default function LoginScreen() {
 
   const [erroUsuario, setErroUsuario] = useState('');
   const [erroSenha, setErroSenha] = useState('');
-
-  const router = useRouter();
-
-  useEffect(() => {
-    verificarSessao();
-  }, []);
-
-  // ==================================================
-  // SESSÃO
-  // ==================================================
-
-  async function verificarSessao() {
-    try {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-
-      if (error) {
-        console.log(
-          'Erro ao verificar sessão:',
-          error
-        );
-
-        return;
-      }
-
-      if (session) {
-        console.log(
-          'Sessão encontrada. Redirecionando para Home.'
-        );
-
-        router.replace('/home');
-      }
-    } catch (error) {
-      console.log(
-        'Erro inesperado ao verificar sessão:',
-        error
-      );
-    }
-  }
 
   // ==================================================
   // LOGIN
@@ -153,23 +111,8 @@ export default function LoginScreen() {
         return;
       }
 
-      console.log(
-        'Login realizado com sucesso!'
-      );
-      console.log(
-        'Usuário:',
-        data.perfil?.usuario
-      );
-      console.log(
-        'Nome:',
-        data.perfil?.nome
-      );
-      console.log(
-        'Perfil:',
-        data.perfil?.perfil
-      );
-
-      router.replace('/home');
+      // Não precisa navegar: ao criar a sessão, a proteção de
+      // rotas do _layout troca o login pela Home sozinha.
     } catch (error) {
       console.log(
         'Erro inesperado no login:',

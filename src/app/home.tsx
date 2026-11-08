@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,11 +13,26 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLORS } from '../constants/theme';
-import { supabase } from '../lib/supabase';
+import { useSessao } from '../contexts/SessaoContext';
 import {
   buscarDadosDashboard,
   DashboardDados,
 } from '../services/dashboardService';
+
+// Saudação de acordo com o horário do celular.
+function obterSaudacao() {
+  const hora = new Date().getHours();
+
+  if (hora >= 5 && hora < 12) {
+    return 'Bom dia';
+  }
+
+  if (hora >= 12 && hora < 18) {
+    return 'Boa tarde';
+  }
+
+  return 'Boa noite';
+}
 
 const dadosIniciais: DashboardDados = {
   faturamento: 0,
@@ -31,7 +46,9 @@ const dadosIniciais: DashboardDados = {
 export default function HomeScreen() {
   const router = useRouter();
 
-  const [nomeUsuario, setNomeUsuario] = useState('');
+  // Primeiro nome do usuário logado (vem do contexto de sessão).
+  const { perfil } = useSessao();
+  const nomeUsuario = perfil?.nome.trim().split(' ')[0] ?? '';
 
   const [dashboard, setDashboard] =
     useState<DashboardDados>(dadosIniciais);
@@ -41,19 +58,20 @@ export default function HomeScreen() {
   const [carregandoDashboard, setCarregandoDashboard] =
     useState(true);
 
-  useEffect(() => {
-    carregarHome();
-  }, []);
+  // Recarrega sempre que a Home volta a ficar visível,
+  // para refletir clientes, produtos e lotes recém-cadastrados.
+  useFocusEffect(
+    useCallback(() => {
+      carregarHome();
+    }, [])
+  );
 
   // ==================================================
   // CARREGAMENTO DA HOME
   // ==================================================
 
   async function carregarHome() {
-    await Promise.all([
-      carregarPerfil(),
-      carregarDashboard(),
-    ]);
+    await carregarDashboard();
   }
 
   async function atualizarDashboard() {
@@ -67,58 +85,6 @@ export default function HomeScreen() {
   }
 
   // ==================================================
-  // PERFIL / SESSÃO
-  // ==================================================
-
-  async function carregarPerfil() {
-    try {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-        console.log(
-          'Usuário sem sessão. Redirecionando para Login.'
-        );
-
-        router.replace('/');
-        return;
-      }
-
-      const user = session.user;
-
-      const { data: perfil, error: perfilError } =
-        await supabase
-          .from('perfis')
-          .select('nome')
-          .eq('id', user.id)
-          .single();
-
-      if (perfilError) {
-        console.log(
-          'Erro ao carregar perfil:',
-          perfilError
-        );
-
-        return;
-      }
-
-      if (perfil?.nome) {
-        const primeiroNome =
-          perfil.nome.trim().split(' ')[0];
-
-        setNomeUsuario(primeiroNome);
-      }
-    } catch (error) {
-      console.log(
-        'Erro inesperado ao carregar perfil:',
-        error
-      );
-    }
-  }
-
-  // ==================================================
   // DASHBOARD
   // ==================================================
 
@@ -127,11 +93,6 @@ export default function HomeScreen() {
       const dados = await buscarDadosDashboard();
 
       setDashboard(dados);
-
-      console.log(
-        'Dashboard carregado com sucesso:',
-        dados
-      );
     } catch (error) {
       console.log(
         'Erro ao carregar Dashboard:',
@@ -164,60 +125,6 @@ export default function HomeScreen() {
       month: '2-digit',
       year: 'numeric',
     });
-  }
-
-  // ==================================================
-  // LOGOUT
-  // ==================================================
-
-  function handleLogout() {
-    Alert.alert(
-      'Sair do sistema',
-      'Deseja realmente sair da sua conta?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Sair',
-          style: 'destructive',
-
-          onPress: async () => {
-            try {
-              const { error } =
-                await supabase.auth.signOut();
-
-              if (error) {
-                console.log(
-                  'Erro ao sair:',
-                  error
-                );
-
-                Alert.alert(
-                  'Erro',
-                  'Não foi possível sair da sua conta.'
-                );
-
-                return;
-              }
-
-              router.replace('/');
-            } catch (error) {
-              console.log(
-                'Erro inesperado ao sair:',
-                error
-              );
-
-              Alert.alert(
-                'Erro',
-                'Não foi possível sair da sua conta.'
-              );
-            }
-          },
-        },
-      ]
-    );
   }
 
   return (
@@ -254,7 +161,9 @@ export default function HomeScreen() {
 
             <Pressable
               className="h-11 w-11 items-center justify-center rounded-[14px] border border-salamandra-border bg-salamandra-card active:opacity-70"
-              onPress={handleLogout}
+              onPress={() => router.push('/menu')}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir menu do usuário"
             >
               <Ionicons
                 name="person-outline"
@@ -270,7 +179,7 @@ export default function HomeScreen() {
 
           <View className="mb-6 mt-[34px]">
             <Text className="text-[25px] font-bold text-salamandra-text">
-              Bom dia
+              {obterSaudacao()}
               {nomeUsuario ? `, ${nomeUsuario}` : ''} 👋
             </Text>
 
@@ -446,18 +355,23 @@ export default function HomeScreen() {
 
               <Pressable
                 className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70"
-                onPress={() => router.push('/clientes')}
+                onPress={() =>
+                  Alert.alert(
+                    'Em breve',
+                    'O módulo de vendas ainda está em desenvolvimento.'
+                  )
+                }
               >
                 <View className="mr-[11px] h-9 w-9 items-center justify-center rounded-[10px] bg-salamandra-gold">
                   <Ionicons
-                    name="people-outline"
+                    name="cart-outline"
                     size={22}
                     color={COLORS.background}
                   />
                 </View>
 
                 <Text className="flex-shrink text-[13px] font-bold text-salamandra-textSecondary">
-                  Clientes
+                  Nova venda
                 </Text>
               </Pressable>
 
@@ -479,7 +393,7 @@ export default function HomeScreen() {
 
               {/* CLIENTES */}
 
-              <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70">
+              <Pressable className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70" onPress={() => router.push('/clientes')}>
                 <View className="mr-[11px] h-9 w-9 items-center justify-center rounded-[10px] bg-salamandra-gold">
                   <Ionicons
                     name="people-outline"
@@ -516,14 +430,34 @@ export default function HomeScreen() {
              ================================================== */}
 
           <View className="mt-7">
-            <View className="mb-[14px]">
-              <Text className="text-lg font-bold text-salamandra-text">
-                Últimas vendas
-              </Text>
+            <View className="mb-[14px] flex-row items-end justify-between">
+              <View>
+                <Text className="text-lg font-bold text-salamandra-text">
+                  Últimas vendas
+                </Text>
 
-              <Text className="mt-1 text-xs text-salamandra-subtle">
-                Movimentações mais recentes
-              </Text>
+                <Text className="mt-1 text-xs text-salamandra-subtle">
+                  Movimentações mais recentes
+                </Text>
+              </View>
+
+              <Pressable
+                className="flex-row items-center active:opacity-70"
+                onPress={() => router.push('/vendas')}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Ver todas as vendas"
+              >
+                <Text className="text-xs font-bold text-salamandra-gold">
+                  Ver todas
+                </Text>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={15}
+                  color={COLORS.gold}
+                />
+              </Pressable>
             </View>
 
             {dashboard.ultimasVendas.length === 0 ? (
@@ -554,9 +488,17 @@ export default function HomeScreen() {
               <View className="overflow-hidden rounded-2xl border border-salamandra-border bg-salamandra-card">
                 {dashboard.ultimasVendas.map(
                   (venda, index) => (
-                    <View
+                    <Pressable
                       key={venda.id}
-                      className={`flex-row items-center px-4 py-4 ${index <
+                      onPress={() =>
+                        router.push({
+                          pathname: '/venda/[id]',
+                          params: { id: venda.id },
+                        })
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel={`Venda para ${venda.cliente}`}
+                      className={`flex-row items-center px-4 py-4 active:opacity-70 ${index <
                           dashboard.ultimasVendas.length - 1
                           ? 'border-b border-salamandra-border'
                           : ''
@@ -601,7 +543,7 @@ export default function HomeScreen() {
                           {venda.status}
                         </Text>
                       </View>
-                    </View>
+                    </Pressable>
                   )
                 )}
               </View>
@@ -633,7 +575,12 @@ export default function HomeScreen() {
 
           {/* RELATÓRIOS */}
 
-          <Pressable className="flex-1 items-center justify-center">
+          <Pressable
+            className="flex-1 items-center justify-center active:opacity-70"
+            onPress={() => router.push('/relatorios')}
+            accessibilityRole="button"
+            accessibilityLabel="Relatórios"
+          >
             <Ionicons
               name="bar-chart-outline"
               size={23}
@@ -647,7 +594,12 @@ export default function HomeScreen() {
 
           {/* MENU */}
 
-          <Pressable className="flex-1 items-center justify-center">
+          <Pressable
+            className="flex-1 items-center justify-center active:opacity-70"
+            onPress={() => router.push('/menu')}
+            accessibilityRole="button"
+            accessibilityLabel="Menu"
+          >
             <Ionicons
               name="menu-outline"
               size={25}

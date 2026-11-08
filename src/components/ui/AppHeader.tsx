@@ -8,6 +8,8 @@ interface AppHeaderProps {
   subtitle?: string;
   onBack?: () => void;
   actionIcon?: keyof typeof Ionicons.glyphMap;
+  // Texto lido pelo leitor de tela no botão de ação (ex.: "Novo cliente").
+  actionLabel?: string;
   onActionPress?: () => void;
 }
 
@@ -16,6 +18,7 @@ export function AppHeader({
   subtitle,
   onBack,
   actionIcon,
+  actionLabel = 'Ação',
   onActionPress,
 }: AppHeaderProps) {
   return (
@@ -66,7 +69,7 @@ export function AppHeader({
           onPress={onActionPress}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Ação"
+          accessibilityLabel={actionLabel}
         >
           <Ionicons
             name={actionIcon}

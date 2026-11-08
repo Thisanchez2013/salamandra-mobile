@@ -10,7 +10,10 @@ export const supabase = createClient(
   supabaseKey,
   {
     auth: {
-      storage: AsyncStorage,
+      // No celular a sessão fica no AsyncStorage. Na web o Supabase
+      // usa o localStorage do navegador por conta própria; forçar o
+      // AsyncStorage lá quebra a renderização no servidor (window is not defined).
+      ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : {}),
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,

@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { COLORS } from '../../constants/theme';
 import { Cliente } from '../../types/cliente';
+import { maskCPF } from '../../utils/masks';
 
 interface ClienteCardProps {
   cliente: Cliente;
@@ -39,7 +40,7 @@ export function ClienteCard({
         </Text>
 
         <Text className="mt-1 text-xs text-salamandra-muted">
-          CPF: {cliente.cpf}
+          CPF: {maskCPF(cliente.cpf ?? '')}
         </Text>
 
         {cliente.email ? (
