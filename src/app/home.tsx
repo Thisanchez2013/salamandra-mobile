@@ -146,11 +146,6 @@ export default function HomeScreen() {
       const dados = await buscarDadosDashboard();
 
       setDashboard(dados);
-
-      console.log(
-        'Dashboard carregado com sucesso:',
-        dados
-      );
     } catch (error) {
       console.log(
         'Erro ao carregar Dashboard:',

@@ -153,22 +153,6 @@ export default function LoginScreen() {
         return;
       }
 
-      console.log(
-        'Login realizado com sucesso!'
-      );
-      console.log(
-        'Usuário:',
-        data.perfil?.usuario
-      );
-      console.log(
-        'Nome:',
-        data.perfil?.nome
-      );
-      console.log(
-        'Perfil:',
-        data.perfil?.perfil
-      );
-
       router.replace('/home');
     } catch (error) {
       console.log(
