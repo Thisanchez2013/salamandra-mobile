@@ -483,14 +483,34 @@ export default function HomeScreen() {
              ================================================== */}
 
           <View className="mt-7">
-            <View className="mb-[14px]">
-              <Text className="text-lg font-bold text-salamandra-text">
-                Últimas vendas
-              </Text>
+            <View className="mb-[14px] flex-row items-end justify-between">
+              <View>
+                <Text className="text-lg font-bold text-salamandra-text">
+                  Últimas vendas
+                </Text>
 
-              <Text className="mt-1 text-xs text-salamandra-subtle">
-                Movimentações mais recentes
-              </Text>
+                <Text className="mt-1 text-xs text-salamandra-subtle">
+                  Movimentações mais recentes
+                </Text>
+              </View>
+
+              <Pressable
+                className="flex-row items-center active:opacity-70"
+                onPress={() => router.push('/vendas')}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Ver todas as vendas"
+              >
+                <Text className="text-xs font-bold text-salamandra-gold">
+                  Ver todas
+                </Text>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={15}
+                  color={COLORS.gold}
+                />
+              </Pressable>
             </View>
 
             {dashboard.ultimasVendas.length === 0 ? (
@@ -521,9 +541,17 @@ export default function HomeScreen() {
               <View className="overflow-hidden rounded-2xl border border-salamandra-border bg-salamandra-card">
                 {dashboard.ultimasVendas.map(
                   (venda, index) => (
-                    <View
+                    <Pressable
                       key={venda.id}
-                      className={`flex-row items-center px-4 py-4 ${index <
+                      onPress={() =>
+                        router.push({
+                          pathname: '/venda/[id]',
+                          params: { id: venda.id },
+                        })
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel={`Venda para ${venda.cliente}`}
+                      className={`flex-row items-center px-4 py-4 active:opacity-70 ${index <
                           dashboard.ultimasVendas.length - 1
                           ? 'border-b border-salamandra-border'
                           : ''
@@ -568,7 +596,7 @@ export default function HomeScreen() {
                           {venda.status}
                         </Text>
                       </View>
-                    </View>
+                    </Pressable>
                   )
                 )}
               </View>

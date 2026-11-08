@@ -338,8 +338,7 @@ export default function MenuScreen() {
           icon="receipt-outline"
           titulo="Histórico de vendas"
           descricao="Consultar vendas realizadas"
-          onPress={() => avisarEmBreve('O histórico de vendas')}
-          emBreve
+          onPress={() => router.push('/vendas')}
         />
 
         {/* ==================================================
