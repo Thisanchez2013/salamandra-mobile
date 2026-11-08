@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLORS } from '../constants/theme';
-import { supabase } from '../lib/supabase';
+import { useSessao } from '../contexts/SessaoContext';
 import {
   buscarDadosDashboard,
   DashboardDados,
@@ -46,7 +46,9 @@ const dadosIniciais: DashboardDados = {
 export default function HomeScreen() {
   const router = useRouter();
 
-  const [nomeUsuario, setNomeUsuario] = useState('');
+  // Primeiro nome do usuário logado (vem do contexto de sessão).
+  const { perfil } = useSessao();
+  const nomeUsuario = perfil?.nome.trim().split(' ')[0] ?? '';
 
   const [dashboard, setDashboard] =
     useState<DashboardDados>(dadosIniciais);
@@ -69,10 +71,7 @@ export default function HomeScreen() {
   // ==================================================
 
   async function carregarHome() {
-    await Promise.all([
-      carregarPerfil(),
-      carregarDashboard(),
-    ]);
+    await carregarDashboard();
   }
 
   async function atualizarDashboard() {
@@ -82,58 +81,6 @@ export default function HomeScreen() {
       await carregarDashboard();
     } finally {
       setAtualizando(false);
-    }
-  }
-
-  // ==================================================
-  // PERFIL / SESSÃO
-  // ==================================================
-
-  async function carregarPerfil() {
-    try {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-        console.log(
-          'Usuário sem sessão. Redirecionando para Login.'
-        );
-
-        router.replace('/');
-        return;
-      }
-
-      const user = session.user;
-
-      const { data: perfil, error: perfilError } =
-        await supabase
-          .from('perfis')
-          .select('nome')
-          .eq('id', user.id)
-          .single();
-
-      if (perfilError) {
-        console.log(
-          'Erro ao carregar perfil:',
-          perfilError
-        );
-
-        return;
-      }
-
-      if (perfil?.nome) {
-        const primeiroNome =
-          perfil.nome.trim().split(' ')[0];
-
-        setNomeUsuario(primeiroNome);
-      }
-    } catch (error) {
-      console.log(
-        'Erro inesperado ao carregar perfil:',
-        error
-      );
     }
   }
 

@@ -14,17 +14,24 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '../components/ui/AppHeader';
+import { BotaoExcluir } from '../components/ui/BotaoExcluir';
 import { FormInput } from '../components/ui/FormInput';
 import { COLORS } from '../constants/theme';
 import { useClienteForm } from '../hooks/useClienteForm';
 import { useNovoCliente } from '../hooks/useNovoCliente';
-import { buscarClientePorId } from '../services/clienteService';
+import { usePermissoes } from '../hooks/usePermissoes';
+import {
+  buscarClientePorId,
+  excluirCliente,
+} from '../services/clienteService';
+import { mensagemErroExclusao } from '../utils/erros';
 import { maskCEP, maskCPF } from '../utils/masks';
 
 export default function NovoClienteScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const editando = Boolean(id);
+  const { podeExcluir } = usePermissoes();
 
   const [carregandoCliente, setCarregandoCliente] = useState(editando);
   const [erroBuscaCliente, setErroBuscaCliente] = useState<string | null>(
@@ -385,6 +392,26 @@ export default function NovoClienteScreen() {
                   </>
                 )}
               </Pressable>
+
+              {editando && podeExcluir ? (
+                <BotaoExcluir
+                  entidade="cliente"
+                  nome={formData.nome}
+                  onExcluir={async () => {
+                    try {
+                      await excluirCliente(id!, formData.nome);
+                      return null;
+                    } catch (error) {
+                      console.log('Erro ao excluir cliente:', error);
+                      return mensagemErroExclusao(
+                        error,
+                        'Este cliente possui vendas registradas e não pode ser excluído.'
+                      );
+                    }
+                  }}
+                  onExcluido={() => router.back()}
+                />
+              ) : null}
             </>
           )}
         </ScrollView>

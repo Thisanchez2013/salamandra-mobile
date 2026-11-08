@@ -10,6 +10,7 @@ export function useClientes() {
   const [pesquisa, setPesquisa] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [atualizando, setAtualizando] = useState(false);
 
   // ==================================================
   // CARREGAMENTO
@@ -42,6 +43,20 @@ export function useClientes() {
       carregarClientes();
     }, [carregarClientes])
   );
+
+  // Puxar para atualizar: recarrega sem trocar a lista pelo "carregando".
+  const atualizar = useCallback(async () => {
+    try {
+      setAtualizando(true);
+      setErro(null);
+      setClientes(await buscarClientes());
+    } catch (error) {
+      console.log('Erro ao atualizar clientes:', error);
+      setErro('Não foi possível carregar os clientes.');
+    } finally {
+      setAtualizando(false);
+    }
+  }, []);
 
   // ==================================================
   // FILTRO
@@ -82,7 +97,9 @@ export function useClientes() {
     pesquisa,
     setPesquisa,
     carregando,
+    atualizando,
     erro,
     carregarClientes,
+    atualizar,
   };
 }

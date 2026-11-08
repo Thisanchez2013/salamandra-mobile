@@ -1,7 +1,7 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 
-import { LIMITE_ESTOQUE_BAIXO } from '../constants/estoque';
+import { precisaReporEstoque } from '../constants/estoque';
 import {
   buscarDadosRelatorio,
   DadosRelatorio,
@@ -128,9 +128,7 @@ export function useRelatorios() {
     );
 
     const estoqueBaixo = dados.produtos
-      .filter(
-        (produto) => produto.quantidadeDisponivel <= LIMITE_ESTOQUE_BAIXO
-      )
+      .filter((produto) => precisaReporEstoque(produto.quantidadeDisponivel))
       .sort((a, b) => a.quantidadeDisponivel - b.quantidadeDisponivel);
 
     return {

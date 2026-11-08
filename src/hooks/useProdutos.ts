@@ -9,6 +9,7 @@ export function useProdutos() {
   const [pesquisa, setPesquisa] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [atualizando, setAtualizando] = useState(false);
 
   const carregarProdutos = useCallback(async () => {
     try {
@@ -25,6 +26,20 @@ export function useProdutos() {
 
   useFocusEffect(useCallback(() => { void carregarProdutos(); }, [carregarProdutos]));
 
+  // Puxar para atualizar: recarrega sem trocar a lista pelo "carregando".
+  const atualizar = useCallback(async () => {
+    try {
+      setAtualizando(true);
+      setErro(null);
+      setProdutos(await buscarProdutos());
+    } catch (error) {
+      console.log('Erro ao atualizar produtos:', error);
+      setErro('Não foi possível carregar os produtos. Verifique sua conexão e as permissões de acesso.');
+    } finally {
+      setAtualizando(false);
+    }
+  }, []);
+
   const produtosFiltrados = useMemo(() => {
     const termo = pesquisa.trim().toLocaleLowerCase('pt-BR');
     if (!termo) return produtos;
@@ -35,5 +50,5 @@ export function useProdutos() {
     );
   }, [produtos, pesquisa]);
 
-  return { produtos, produtosFiltrados, pesquisa, setPesquisa, carregando, erro, carregarProdutos };
+  return { produtos, produtosFiltrados, pesquisa, setPesquisa, carregando, atualizando, erro, carregarProdutos, atualizar };
 }

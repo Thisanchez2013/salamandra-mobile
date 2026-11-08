@@ -1,7 +1,9 @@
 import { supabase } from '../lib/supabase';
-import { LIMITE_ESTOQUE_BAIXO } from '../constants/estoque';
+import { precisaReporEstoque } from '../constants/estoque';
 import { EntradaEstoqueData, LoteProduto, Produto, ProdutoFormData } from '../types/produto';
 import { converterMoeda } from '../utils/currency';
+import { garantirExcluido } from '../utils/erros';
+import { registrarAuditoria } from './auditoriaService';
 
 type ProdutoRow = Omit<Produto, 'quantidadeDisponivel'>;
 type LoteRow = LoteProduto;
@@ -74,7 +76,7 @@ export async function contarProdutosComEstoqueBaixo(): Promise<number> {
   lotes.forEach((lote) => {
     saldoPorProduto.set(lote.id_produto, (saldoPorProduto.get(lote.id_produto) ?? 0) + Number(lote.quantidade));
   });
-  return produtos.filter((produto) => (saldoPorProduto.get(produto.id) ?? 0) <= LIMITE_ESTOQUE_BAIXO).length;
+  return produtos.filter((produto) => precisaReporEstoque(saldoPorProduto.get(produto.id) ?? 0)).length;
 }
 
 export async function buscarProdutoPorId(id: string): Promise<{ produto: Produto; lotes: LoteProduto[] } | null> {
@@ -104,6 +106,23 @@ export async function salvarProduto(form: ProdutoFormData, id?: string): Promise
     ? await supabase.from('produtos').update(payload).eq('id', id).select('id').single()
     : await supabase.from('produtos').insert(payload).select('id').single();
   if (error) throw error;
+
+  await registrarAuditoria(id ? 'EDITAR' : 'CRIAR', `Produto: ${payload.nome}`);
+}
+
+// Exclusão (somente ADMIN). O banco bloqueia se o produto tiver lotes ou vendas.
+export async function excluirProduto(id: string, nome: string): Promise<void> {
+  const { data, error } = await supabase
+    .from('produtos')
+    .delete()
+    .eq('id', id)
+    .select('id');
+
+  if (error) throw error;
+
+  garantirExcluido(data);
+
+  await registrarAuditoria('EXCLUIR', `Produto: ${nome}`);
 }
 
 export async function registrarEntradaEstoque(
@@ -117,4 +136,9 @@ export async function registrarEntradaEstoque(
     custo_unitario: converterMoeda(form.custoUnitario),
   });
   if (error) throw error;
+
+  await registrarAuditoria(
+    'ENTRADA_ESTOQUE',
+    `Lote ${form.codigoLote.trim()}: ${Number(form.quantidade)} un.`
+  );
 }

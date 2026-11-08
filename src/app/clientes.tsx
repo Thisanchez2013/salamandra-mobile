@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ClienteCard } from '../components/clientes/ClienteCard';
@@ -10,6 +10,7 @@ import {
   LoadingState,
 } from '../components/ui/EstadosTela';
 import { SearchInput } from '../components/ui/SearchInput';
+import { COLORS } from '../constants/theme';
 import { useClientes } from '../hooks/useClientes';
 
 export default function ClientesScreen() {
@@ -21,7 +22,9 @@ export default function ClientesScreen() {
     pesquisa,
     setPesquisa,
     carregando,
+    atualizando,
     erro,
+    atualizar,
     carregarClientes,
   } = useClientes();
 
@@ -49,6 +52,14 @@ export default function ClientesScreen() {
         className="flex-1 px-[22px]"
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={atualizando}
+            onRefresh={atualizar}
+            tintColor={COLORS.gold}
+            colors={[COLORS.gold]}
+          />
+        }
       >
         <SearchInput
           value={pesquisa}

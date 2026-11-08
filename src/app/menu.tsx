@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
@@ -12,14 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '../components/ui/AppHeader';
+import { NOME_CARGO } from '../constants/permissoes';
 import { COLORS } from '../constants/theme';
+import { useSessao } from '../contexts/SessaoContext';
+import { usePermissoes } from '../hooks/usePermissoes';
 import { supabase } from '../lib/supabase';
-
-interface PerfilUsuario {
-  nome: string;
-  usuario: string;
-  perfil: string;
-}
 
 interface ItemMenuProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -117,49 +113,9 @@ function TituloSecao({ titulo }: { titulo: string }) {
 export default function MenuScreen() {
   const router = useRouter();
 
-  const [perfil, setPerfil] =
-    useState<PerfilUsuario | null>(null);
-  const [carregandoPerfil, setCarregandoPerfil] =
-    useState(true);
-
-  const carregarPerfil = useCallback(async () => {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        router.replace('/');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('perfis')
-        .select('nome, usuario, perfil')
-        .eq('id', session.user.id)
-        .single();
-
-      if (error) {
-        console.log('Erro ao carregar perfil:', error);
-        return;
-      }
-
-      setPerfil(data);
-    } catch (error) {
-      console.log(
-        'Erro inesperado ao carregar perfil:',
-        error
-      );
-    } finally {
-      setCarregandoPerfil(false);
-    }
-  }, [router]);
-
-  useFocusEffect(
-    useCallback(() => {
-      carregarPerfil();
-    }, [carregarPerfil])
-  );
+  const { perfil } = useSessao();
+  const { podeVerAuditoria } = usePermissoes();
+  const carregandoPerfil = !perfil;
 
   // ==================================================
   // AÇÕES
@@ -207,13 +163,9 @@ export default function MenuScreen() {
                 return;
               }
 
-              // Limpa o histórico de telas para o botão
-              // "voltar" não retornar para dentro do sistema.
-              if (router.canDismiss()) {
-                router.dismissAll();
-              }
-
-              router.replace('/');
+              // Não precisa navegar: sem sessão, a proteção de rotas
+              // do _layout fecha as telas internas e volta para o login,
+              // sem deixar histórico para o botão "voltar".
             } catch (error) {
               console.log(
                 'Erro inesperado ao sair:',
@@ -285,7 +237,7 @@ export default function MenuScreen() {
               {perfil?.perfil ? (
                 <View className="rounded-lg border border-salamandra-gold px-2.5 py-1">
                   <Text className="text-[10px] font-bold tracking-[1px] text-salamandra-gold">
-                    {perfil.perfil}
+                    {(NOME_CARGO[perfil.perfil] ?? perfil.perfil).toUpperCase()}
                   </Text>
                 </View>
               ) : null}
@@ -318,6 +270,13 @@ export default function MenuScreen() {
           titulo="Estoque"
           descricao="Saldo e entradas por lote"
           onPress={() => router.push('/produtos')}
+        />
+
+        <ItemMenu
+          icon="business-outline"
+          titulo="Fornecedores"
+          descricao="Cadastre e consulte fornecedores"
+          onPress={() => router.push('/fornecedores')}
         />
 
         {/* ==================================================
@@ -353,6 +312,15 @@ export default function MenuScreen() {
            ================================================== */}
 
         <TituloSecao titulo="CONTA" />
+
+        {podeVerAuditoria ? (
+          <ItemMenu
+            icon="shield-checkmark-outline"
+            titulo="Auditoria"
+            descricao="Histórico de alterações no sistema"
+            onPress={() => router.push('/auditoria')}
+          />
+        ) : null}
 
         <ItemMenu
           icon="information-circle-outline"

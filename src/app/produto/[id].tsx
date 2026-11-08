@@ -5,15 +5,21 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '../../components/ui/AppHeader';
+import { BotaoExcluir } from '../../components/ui/BotaoExcluir';
 import {
   EmptyState,
   ErrorState,
   LoadingState,
 } from '../../components/ui/EstadosTela';
 import { COLORS } from '../../constants/theme';
-import { buscarProdutoPorId } from '../../services/produtoService';
+import { usePermissoes } from '../../hooks/usePermissoes';
+import {
+  buscarProdutoPorId,
+  excluirProduto,
+} from '../../services/produtoService';
 import { LoteProduto, Produto } from '../../types/produto';
 import { formatarMoedaBRL } from '../../utils/currency';
+import { mensagemErroExclusao } from '../../utils/erros';
 
 function formatarDataHora(valor: string) {
   return new Date(valor).toLocaleString('pt-BR', {
@@ -25,6 +31,7 @@ function formatarDataHora(valor: string) {
 export default function ProdutoDetalheScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { podeGerenciarProdutos, podeExcluir } = usePermissoes();
 
   const [produto, setProduto] = useState<Produto | null>(null);
   const [lotes, setLotes] = useState<LoteProduto[]>([]);
@@ -66,7 +73,7 @@ export default function ProdutoDetalheScreen() {
         title="Detalhes do produto"
         subtitle={produto?.nome ?? 'Produto e lotes'}
         onBack={() => router.back()}
-        actionIcon="create-outline"
+        actionIcon={podeGerenciarProdutos ? 'create-outline' : undefined}
         actionLabel="Editar produto"
         onActionPress={() =>
           router.push({
@@ -132,27 +139,29 @@ export default function ProdutoDetalheScreen() {
                 </Text>
               </View>
 
-              <Pressable
-                className="mt-4 h-[50px] flex-row items-center justify-center rounded-xl bg-salamandra-gold active:opacity-80"
-                onPress={() =>
-                  router.push({
-                    pathname: '/entrada-estoque',
-                    params: { produtoId: produto.id },
-                  })
-                }
-                accessibilityRole="button"
-                accessibilityLabel="Registrar entrada de estoque"
-              >
-                <Ionicons
-                  name="add-circle-outline"
-                  size={20}
-                  color={COLORS.background}
-                />
+              {podeGerenciarProdutos ? (
+                <Pressable
+                  className="mt-4 h-[50px] flex-row items-center justify-center rounded-xl bg-salamandra-gold active:opacity-80"
+                  onPress={() =>
+                    router.push({
+                      pathname: '/entrada-estoque',
+                      params: { produtoId: produto.id },
+                    })
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel="Registrar entrada de estoque"
+                >
+                  <Ionicons
+                    name="add-circle-outline"
+                    size={20}
+                    color={COLORS.background}
+                  />
 
-                <Text className="ml-2 text-sm font-extrabold text-salamandra-background">
-                  REGISTRAR ENTRADA
-                </Text>
-              </Pressable>
+                  <Text className="ml-2 text-sm font-extrabold text-salamandra-background">
+                    REGISTRAR ENTRADA
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
 
             {/* ==================================================
@@ -206,6 +215,28 @@ export default function ProdutoDetalheScreen() {
                 </View>
               ))
             )}
+
+            {podeExcluir ? (
+              <View className="mt-4">
+                <BotaoExcluir
+                  entidade="produto"
+                  nome={produto.nome}
+                  onExcluir={async () => {
+                    try {
+                      await excluirProduto(produto.id, produto.nome);
+                      return null;
+                    } catch (error) {
+                      console.log('Erro ao excluir produto:', error);
+                      return mensagemErroExclusao(
+                        error,
+                        'Este produto possui lotes de estoque ou vendas registradas e não pode ser excluído.'
+                      );
+                    }
+                  }}
+                  onExcluido={() => router.back()}
+                />
+              </View>
+            ) : null}
           </>
         )}
 
