@@ -1,6 +1,10 @@
 import { useRouter } from 'expo-router';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { useState } from 'react';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Ionicons } from '@expo/vector-icons';
 
 import { ProdutoCard } from '../components/produtos/ProdutoCard';
 import { AppHeader } from '../components/ui/AppHeader';
@@ -18,6 +22,9 @@ export default function ProdutosScreen() {
   const router = useRouter();
   const { podeGerenciarProdutos } = usePermissoes();
 
+  const [permissaoCamera, solicitarPermissao] = useCameraPermissions();
+  const [cameraAberta, setCameraAberta] = useState(false);
+
   const {
     produtos,
     produtosFiltrados,
@@ -29,6 +36,16 @@ export default function ProdutosScreen() {
     atualizar,
     carregarProdutos,
   } = useProdutos();
+
+          /* ==================================================
+                Função para ler o QRCODE e inserir na busca
+           ================================================== */
+  async function handleBarCodeScanned({ data }: { data: string }) {
+    if (!data) return;
+    // Substitui 'setPesquisa' pelo nome da variável que filtra a tua lista na tela
+    setPesquisa(data.replace(/\D/g, '')); 
+    setCameraAberta(false);
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-salamandra-background">
@@ -54,11 +71,35 @@ export default function ProdutosScreen() {
           />
         }
       >
-        <SearchInput
-          value={pesquisa}
-          onChangeText={setPesquisa}
-          placeholder="Buscar por nome ou código"
-        />
+        
+        {/* ENVOLVE O SEARCHINPUT E ADICIONA O BOTÃO AO LADO */}
+        <View className="flex-row items-center gap-2">
+          <View className="flex-1">
+            <SearchInput
+              value={pesquisa}
+              onChangeText={setPesquisa}
+              placeholder="Buscar por nome ou código"
+            />
+          </View>
+
+          {/* --- ADICIONE ESTE BOTÃO AQUI --- */}
+          <Pressable
+            className="h-[52px] w-[52px] mt-[18] self-center items-center justify-center rounded-xl bg-salamandra-card border border-salamandra-border active:opacity-70"
+            onPress={async () => {
+              if (!permissaoCamera?.granted) {
+                const res = await solicitarPermissao();
+                if (!res.granted) {
+                  alert('Precisamos de permissão para usar a câmara.');
+                  return;
+                }
+              }
+              setCameraAberta(true);
+            }}
+          >
+            <Ionicons name="barcode-outline" size={24} color={COLORS.gold} />
+          </Pressable>
+          {/* --------------------------------- */}
+        </View>
 
         {/* ==================================================
                             TÍTULO DA LISTA
@@ -124,6 +165,42 @@ export default function ProdutosScreen() {
 
         <View className="h-8" />
       </ScrollView>
+      {/* MODAL DA CÂMARA PARA BUSCA POR CÓDIGO DE BARRAS */}
+      <Modal visible={cameraAberta} animationType="slide" transparent={false}>
+        <View className="flex-1 bg-black">
+          <CameraView
+            style={{ flex: 1, width: '100%', height: '100%' }}
+            facing="back"
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr", "code128", "ean13", "ean8"],
+            }}
+            onBarcodeScanned={handleBarCodeScanned}
+          >
+            <SafeAreaView className="flex-1 justify-between p-6">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-lg font-bold text-white">
+                  Aponte para o código do produto
+                </Text>
+                <Pressable
+                  className="h-10 w-10 items-center justify-center rounded-full bg-black/60"
+                  onPress={() => setCameraAberta(false)}
+                >
+                  <Ionicons name="close" size={24} color="#fff" />
+                </Pressable>
+              </View>
+
+              {/* Mira visual no centro */}
+              <View className="self-center h-48 w-72 rounded-2xl border-2 border-dashed border-salamandra-gold opacity-80" />
+
+              <View className="items-center pb-4">
+                <Text className="text-xs text-white/75">
+                  A lista será filtrada automaticamente ao focar.
+                </Text>
+              </View>
+            </SafeAreaView>
+          </CameraView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
