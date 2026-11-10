@@ -8,7 +8,10 @@ import {
   ScrollView,
   Text,
   View,
+  Modal,
 } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '../components/ui/AppHeader';
@@ -27,6 +30,9 @@ export default function ProdutoFormularioScreen() {
 
   const [carregandoProduto, setCarregandoProduto] = useState(editando);
   const [erroBusca, setErroBusca] = useState<string | null>(null);
+
+  const [permissaoCamera, solicitarPermissao] = useCameraPermissions();
+  const [cameraAberta, setCameraAberta] = useState(false);
 
   const { formData, errors, updateField, preencherForm, validar } =
     useProdutoForm();
@@ -69,6 +75,17 @@ export default function ProdutoFormularioScreen() {
   useEffect(() => {
     if (id) void carregarProduto();
   }, [id, carregarProduto]);
+
+  // ==================================================
+  // Le o código da câmera
+  // ==================================================
+
+  async function handleBarCodeScanned({ data }: { data: string }) {
+    if (!data) return;
+    // Atualiza o campo código com o valor lido pela câmara
+    updateField('codigo', data.replace(/\D/g, ''));
+    setCameraAberta(false);
+  }
 
   // ==================================================
   // SALVAR
@@ -121,17 +138,37 @@ export default function ProdutoFormularioScreen() {
                 </Text>
               </View>
 
-              <FormInput
-                label="Código"
-                required
-                placeholder="Ex.: 1001"
-                value={formData.codigo}
-                onChangeText={(value) =>
-                  updateField('codigo', value.replace(/\D/g, ''))
-                }
-                error={errors.codigo}
-                keyboardType="number-pad"
-              />
+              {/* CAMPO DE CÓDIGO COM BOTÃO DA CÂMARA */}
+              <View className="relative">
+                <FormInput
+                  label="Código"
+                  required
+                  placeholder="Ex.: 1001"
+                  value={formData.codigo}
+                  onChangeText={(value) =>
+                    updateField('codigo', value.replace(/\D/g, ''))
+                  }
+                  error={errors.codigo}
+                  keyboardType="number-pad"
+                />
+
+                {/* BOTÃO PARA ABRIR A CÂMARA */}
+                <Pressable
+                  className="absolute right-3 top-9 h-10 w-10 items-center justify-center rounded-xl bg-salamandra-card border border-salamandra-border active:opacity-70"
+                  onPress={async () => {
+                    if (!permissaoCamera?.granted) {
+                      const res = await solicitarPermissao();
+                      if (!res.granted) {
+                        alert('Precisamos de permissão para usar a câmara.');
+                        return;
+                      }
+                    }
+                    setCameraAberta(true);
+                  }}
+                >
+                  <Ionicons name="barcode-outline" size={20} color={COLORS.gold} />
+                </Pressable>
+              </View>
 
               <FormInput
                 label="Nome"
@@ -227,6 +264,42 @@ export default function ProdutoFormularioScreen() {
             </>
           )}
         </ScrollView>
+        {/* MODAL DA CÂMARA PARA LEITURA DE CÓDIGO DE BARRAS */}
+      <Modal visible={cameraAberta} animationType="slide" transparent={false}>
+        <View className="flex-1 bg-black">
+          <CameraView
+            style={{ flex: 1, width: '100%', height: '100%' }}
+            facing="back"
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr", "code128", "ean13", "ean8"],
+            }}
+            onBarcodeScanned={handleBarCodeScanned}
+          >
+            <SafeAreaView className="flex-1 justify-between p-6">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-lg font-bold text-white">
+                  Aponte para o código de barras
+                </Text>
+                <Pressable
+                  className="h-10 w-10 items-center justify-center rounded-full bg-black/60"
+                  onPress={() => setCameraAberta(false)}
+                >
+                  <Ionicons name="close" size={24} color="#fff" />
+                </Pressable>
+              </View>
+
+              {/* Mira visual no centro */}
+              <View className="self-center h-48 w-72 rounded-2xl border-2 border-dashed border-salamandra-gold opacity-80" />
+
+              <View className="items-center pb-4">
+                <Text className="text-xs text-white/75">
+                  O código será preenchido automaticamente ao focar.
+                </Text>
+              </View>
+            </SafeAreaView>
+          </CameraView>
+        </View>
+      </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
