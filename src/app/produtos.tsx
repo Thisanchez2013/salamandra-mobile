@@ -42,8 +42,7 @@ export default function ProdutosScreen() {
            ================================================== */
   async function handleBarCodeScanned({ data }: { data: string }) {
     if (!data) return;
-    // Substitui 'setPesquisa' pelo nome da variável que filtra a tua lista na tela
-    setPesquisa(data.replace(/\D/g, '')); 
+    setPesquisa(data.trim());
     setCameraAberta(false);
   }
 
@@ -82,7 +81,7 @@ export default function ProdutosScreen() {
             />
           </View>
 
-          {/* --- ADICIONE ESTE BOTÃO AQUI --- */}
+          {/* --- BOTÃO DO LEITOR --- */}
           <Pressable
             className="h-[52px] w-[52px] mt-[18] self-center items-center justify-center rounded-xl bg-salamandra-card border border-salamandra-border active:opacity-70"
             onPress={async () => {
@@ -97,6 +96,14 @@ export default function ProdutosScreen() {
             }}
           >
             <Ionicons name="barcode-outline" size={24} color={COLORS.gold} />
+          </Pressable>
+
+          {/* BOTÃO PARA A TELA DE ETIQUETAS */}
+          <Pressable
+            className="h-[52px] w-[52px] mt-[18px] self-center items-center justify-center rounded-xl bg-salamandra-card border border-salamandra-border active:opacity-70"
+            onPress={() => router.push('/etiquetas' as any)}
+          >
+            <Ionicons name="print-outline" size={24} color={COLORS.gold} />
           </Pressable>
           {/* --------------------------------- */}
         </View>

@@ -279,6 +279,13 @@ export default function MenuScreen() {
           onPress={() => router.push('/fornecedores')}
         />
 
+        <ItemMenu
+          icon="print-outline"
+          titulo="Gerador de etiquetas"
+          descricao="Imprimir folhas A4 com código de barras/QR"
+          onPress={() => router.push('/etiquetas' as any)}
+        />
+
         {/* ==================================================
                                 VENDAS
            ================================================== */}
