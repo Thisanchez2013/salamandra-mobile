@@ -10,6 +10,7 @@ Aplicativo de **gestão comercial** desenvolvido como Projeto Integrador. Permit
 | **Início (Dashboard)** | Faturamento, total de vendas, clientes, produtos, alerta de estoque baixo e últimas vendas |
 | **Clientes** | Cadastro, edição e busca por nome ou CPF (com validação e máscara de CPF e CEP) |
 | **Produtos e estoque** | Cadastro de produtos e entradas de estoque por **lote**, com custo de aquisição e saldo calculado (FIFO) |
+| **Gerador de Etiquetas** | Emissão e impressão nativa de folhas A4 (padrão Pimaco) com Códigos de Barras e QR Codes dinâmicos |
 | **Histórico de vendas** | Lista de vendas com busca por cliente, filtro por período, totais e detalhe de cada venda |
 | **Relatórios** | Faturamento, ticket médio, itens vendidos, produtos mais vendidos, melhores clientes e estoque baixo |
 | **Menu** | Dados do usuário logado, atalhos para os módulos e saída do sistema |
@@ -20,6 +21,8 @@ Aplicativo de **gestão comercial** desenvolvido como Projeto Integrador. Permit
 - **TypeScript**
 - **NativeWind** (Tailwind CSS no React Native) para o visual
 - **[Supabase](https://supabase.com)**: banco PostgreSQL, autenticação e Edge Function de login
+- **Expo Camera & Print**: Leitura óptica de códigos via hardware e conversão de templates HTML/CSS para impressão nativa de PDFs.
+- **QuickChart API**: Renderização de imagens de códigos de barras (Code 128) e QR Codes em alta resolução.
 
 ## Como rodar
 
@@ -91,4 +94,4 @@ O diagrama completo fica no Supabase em **Database → Schema Visualizer**.
 
 ## Equipe
 
-Projeto Integrador. Desenvolvido por Thiago Sanchez e Leonardo Lacerda.
+Projeto Integrador. Desenvolvido por Thiago Sanchez, Leonardo Lacerda e Thiago Marcelo.
