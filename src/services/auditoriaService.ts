@@ -1,7 +1,8 @@
 import { supabase } from '../lib/supabase';
 
-// Tipos de ação gravados na coluna "acao".
-export type AcaoAuditoria = 'CRIAR' | 'EDITAR' | 'EXCLUIR' | 'ENTRADA_ESTOQUE';
+// Os registros são gravados pelo próprio banco, com triggers
+// (sql/03_auditoria_triggers.sql). O app só lê.
+// Ações: CRIAR, EDITAR, EXCLUIR, ENTRADA_ESTOQUE e VENDA.
 
 export interface RegistroAuditoria {
   id: string;
@@ -9,39 +10,6 @@ export interface RegistroAuditoria {
   descricao: string | null;
   dataHora: string;
   usuario: string;
-}
-
-// ==================================================
-// REGISTRAR
-// Chamado depois de cada cadastro, edição ou exclusão.
-// Uma falha aqui não desfaz a operação principal, só é registrada no log.
-// ==================================================
-
-export async function registrarAuditoria(
-  acao: AcaoAuditoria,
-  descricao: string
-): Promise<void> {
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      return;
-    }
-
-    const { error } = await supabase.from('auditoria').insert({
-      acao,
-      descricao,
-      id_usuario: session.user.id,
-    });
-
-    if (error) {
-      throw error;
-    }
-  } catch (error) {
-    console.log('Erro ao registrar auditoria:', error);
-  }
 }
 
 // ==================================================
@@ -83,6 +51,10 @@ export async function buscarAuditoria(): Promise<RegistroAuditoria[]> {
     acao: registro.acao,
     descricao: registro.descricao,
     dataHora: registro.data_hora,
-    usuario: nomes.get(registro.id_usuario) ?? 'Usuário',
+    // Sem id_usuario: a alteração foi feita direto no Supabase
+    // (painel ou SQL Editor), sem ninguém logado no app.
+    usuario: registro.id_usuario
+      ? nomes.get(registro.id_usuario) ?? 'Usuário'
+      : 'Alteração direta no banco',
   }));
 }

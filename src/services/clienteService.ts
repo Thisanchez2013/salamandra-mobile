@@ -4,7 +4,6 @@ import {
   ClienteFormData,
 } from '../types/cliente';
 import { garantirExcluido } from '../utils/erros';
-import { registrarAuditoria } from './auditoriaService';
 
 // ==================================================
 // LISTAR CLIENTES
@@ -86,8 +85,6 @@ export async function cadastrarCliente(
       throw error;
     }
 
-    await registrarAuditoria('CRIAR', `Cliente: ${data.nome}`);
-
     return data;
   } catch (error) {
     console.log(
@@ -164,8 +161,6 @@ export async function atualizarCliente(
     throw error;
   }
 
-  await registrarAuditoria('EDITAR', `Cliente: ${data.nome}`);
-
   return data;
 }
 
@@ -188,6 +183,4 @@ export async function excluirCliente(
   }
 
   garantirExcluido(data);
-
-  await registrarAuditoria('EXCLUIR', `Cliente: ${nome}`);
 }

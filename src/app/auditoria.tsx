@@ -18,7 +18,13 @@ import {
   RegistroAuditoria,
 } from '../services/auditoriaService';
 
-type FiltroAcao = 'todas' | 'CRIAR' | 'EDITAR' | 'EXCLUIR' | 'ENTRADA_ESTOQUE';
+type FiltroAcao =
+  | 'todas'
+  | 'CRIAR'
+  | 'EDITAR'
+  | 'EXCLUIR'
+  | 'ENTRADA_ESTOQUE'
+  | 'VENDA';
 
 const FILTROS: OpcaoChip<FiltroAcao>[] = [
   { valor: 'todas', rotulo: 'Todas' },
@@ -26,6 +32,7 @@ const FILTROS: OpcaoChip<FiltroAcao>[] = [
   { valor: 'EDITAR', rotulo: 'Edições' },
   { valor: 'EXCLUIR', rotulo: 'Exclusões' },
   { valor: 'ENTRADA_ESTOQUE', rotulo: 'Estoque' },
+  { valor: 'VENDA', rotulo: 'Vendas' },
 ];
 
 // Ícone, cor e texto de cada tipo de ação.
@@ -41,6 +48,7 @@ const ESTILO_ACAO: Record<
     cor: COLORS.gold,
     rotulo: 'Entrada de estoque',
   },
+  VENDA: { icon: 'cart-outline', cor: COLORS.gold, rotulo: 'Venda' },
 };
 
 function formatarDataHora(valor: string) {

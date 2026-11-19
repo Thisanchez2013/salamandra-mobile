@@ -6,7 +6,6 @@ import {
 } from '../types/fornecedor';
 import { garantirExcluido } from '../utils/erros';
 import { somenteNumeros } from '../utils/validators';
-import { registrarAuditoria } from './auditoriaService';
 
 const COLUNAS = 'id, nome, cnpj_cpf, contato, email, endereco, status';
 
@@ -93,11 +92,6 @@ export async function salvarFornecedor(
   if (error) {
     throw error;
   }
-
-  await registrarAuditoria(
-    id ? 'EDITAR' : 'CRIAR',
-    `Fornecedor: ${payload.nome}`
-  );
 }
 
 export async function excluirFornecedor(
@@ -115,6 +109,4 @@ export async function excluirFornecedor(
   }
 
   garantirExcluido(data);
-
-  await registrarAuditoria('EXCLUIR', `Fornecedor: ${nome}`);
 }
