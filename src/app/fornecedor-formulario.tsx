@@ -167,7 +167,7 @@ export default function FornecedorFormularioScreen() {
 
   async function handleExcluir(): Promise<string | null> {
     try {
-      await excluirFornecedor(id!, form.nome);
+      await excluirFornecedor(id!);
       return null;
     } catch (error) {
       console.log('Erro ao excluir fornecedor:', error);

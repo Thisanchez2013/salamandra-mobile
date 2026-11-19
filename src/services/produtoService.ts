@@ -27,8 +27,6 @@ async function buscarTodosOsLotes(idProduto?: string): Promise<LoteRow[]> {
   }
 }
 
-// Linha da view saldo_produtos (sql/02_saldo_produtos.sql):
-// o banco já devolve o saldo somado dos lotes de cada produto.
 type SaldoRow = ProdutoRow & { quantidade_disponivel: number };
 
 async function buscarSaldoProdutos(): Promise<SaldoRow[]> {
@@ -67,8 +65,6 @@ export async function buscarProdutos(): Promise<Produto[]> {
   }));
 }
 
-// Conta direto no banco (view estoque_baixo, sql/04_relatorios.sql),
-// sem baixar a lista de produtos.
 export async function contarProdutosComEstoqueBaixo(): Promise<number> {
   const { count, error } = await supabase
     .from('estoque_baixo')
@@ -104,11 +100,10 @@ export async function salvarProduto(form: ProdutoFormData, id?: string): Promise
     ? await supabase.from('produtos').update(payload).eq('id', id).select('id').single()
     : await supabase.from('produtos').insert(payload).select('id').single();
   if (error) throw error;
-  // A auditoria é gravada pelo trigger do banco (sql/03_auditoria_triggers.sql).
 }
 
 // Exclusão (somente ADMIN). O banco bloqueia se o produto tiver lotes ou vendas.
-export async function excluirProduto(id: string, nome: string): Promise<void> {
+export async function excluirProduto(id: string): Promise<void> {
   const { data, error } = await supabase
     .from('produtos')
     .delete()
@@ -131,5 +126,4 @@ export async function registrarEntradaEstoque(
     custo_unitario: converterMoeda(form.custoUnitario),
   });
   if (error) throw error;
-  // O trigger do banco registra a entrada na auditoria (ENTRADA_ESTOQUE).
 }

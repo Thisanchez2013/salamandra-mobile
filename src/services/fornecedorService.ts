@@ -94,10 +94,7 @@ export async function salvarFornecedor(
   }
 }
 
-export async function excluirFornecedor(
-  id: string,
-  nome: string
-): Promise<void> {
+export async function excluirFornecedor(id: string): Promise<void> {
   const { data, error } = await supabase
     .from('fornecedores')
     .delete()

@@ -18,7 +18,6 @@ const RELATORIO_VAZIO: Relatorio = {
   estoqueBaixo: [],
 };
 
-// Primeiro instante do período, no horário do celular.
 function inicioDoPeriodo(periodo: PeriodoRelatorio): Date | null {
   if (periodo === 'todos') {
     return null;
@@ -38,7 +37,6 @@ function inicioDoPeriodo(periodo: PeriodoRelatorio): Date | null {
   return inicio;
 }
 
-// Data no formato da coluna "dia" das views (AAAA-MM-DD).
 function formatarDia(data: Date): string {
   const mes = String(data.getMonth() + 1).padStart(2, '0');
   const dia = String(data.getDate()).padStart(2, '0');
@@ -53,7 +51,7 @@ export function useRelatorios() {
   const [erro, setErro] = useState<string | null>(null);
 
   // ==================================================
-  // CARREGAMENTO (refaz a consulta quando o período muda)
+  // CARREGAMENTO
   // ==================================================
 
   const carregar = useCallback(async () => {

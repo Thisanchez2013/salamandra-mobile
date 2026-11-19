@@ -11,8 +11,6 @@ export interface ItemCarrinho {
   quantidade: number;
 }
 
-// Códigos devolvidos pela função registrar_venda_fifo (RAISE EXCEPTION,
-// código P0001) traduzidos para mensagens ao usuário.
 const MENSAGENS_ERRO: Record<string, string> = {
   SESSAO_INVALIDA: 'Sua sessão expirou. Entre novamente no app.',
   SEM_PERMISSAO: 'Seu usuário não tem permissão para registrar vendas.',
@@ -31,7 +29,6 @@ function mensagemErroVenda(error: unknown, produtos: Produto[]): string {
     return 'Não foi possível registrar a venda. Verifique sua conexão e tente novamente.';
   }
 
-  // ESTOQUE_INSUFICIENTE:<id do produto>
   const [codigo, idProduto] = erro.message.split(':');
 
   if (codigo === 'ESTOQUE_INSUFICIENTE') {
@@ -93,8 +90,6 @@ export function useNovaVenda() {
     [carrinho]
   );
 
-  // Soma (ou subtrai) unidades, sem passar do saldo disponível.
-  // O banco confere de novo na hora de gravar.
   const alterarQuantidade = useCallback((produto: Produto, delta: number) => {
     setErro(null);
     setCarrinho((atual) => {
@@ -158,7 +153,6 @@ export function useNovaVenda() {
     } catch (error) {
       console.log('Erro ao registrar venda:', error);
       setErro(mensagemErroVenda(error, produtos));
-      // O estoque pode ter mudado: recarrega os saldos.
       setProdutos(await buscarProdutos().catch(() => produtos));
       return null;
     } finally {

@@ -1,9 +1,5 @@
 import { supabase } from '../lib/supabase';
 
-// Os registros são gravados pelo próprio banco, com triggers
-// (sql/03_auditoria_triggers.sql). O app só lê.
-// Ações: CRIAR, EDITAR, EXCLUIR, ENTRADA_ESTOQUE e VENDA.
-
 export interface RegistroAuditoria {
   id: string;
   acao: string;
@@ -51,8 +47,6 @@ export async function buscarAuditoria(): Promise<RegistroAuditoria[]> {
     acao: registro.acao,
     descricao: registro.descricao,
     dataHora: registro.data_hora,
-    // Sem id_usuario: a alteração foi feita direto no Supabase
-    // (painel ou SQL Editor), sem ninguém logado no app.
     usuario: registro.id_usuario
       ? nomes.get(registro.id_usuario) ?? 'Usuário'
       : 'Alteração direta no banco',

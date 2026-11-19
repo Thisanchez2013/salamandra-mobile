@@ -447,7 +447,7 @@ export default function NovoClienteScreen() {
                   nome={formData.nome}
                   onExcluir={async () => {
                     try {
-                      await excluirCliente(id!, formData.nome);
+                      await excluirCliente(id!);
                       return null;
                     } catch (error) {
                       console.log('Erro ao excluir cliente:', error);

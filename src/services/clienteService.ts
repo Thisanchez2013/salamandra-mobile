@@ -4,96 +4,40 @@ import {
   ClienteFormData,
 } from '../types/cliente';
 import { garantirExcluido } from '../utils/erros';
+import { somenteNumeros } from '../utils/validators';
 
-// ==================================================
-// LISTAR CLIENTES
-// ==================================================
+const COLUNAS =
+  'id, nome, email, cpf, rua, numero, bairro, cidade, estado, cep, data_cadastro';
 
-export async function buscarClientes(): Promise<Cliente[]> {
-  try {
-    const { data, error } = await supabase
-      .from('clientes')
-      .select(`
-        id,
-        nome,
-        email,
-        cpf,
-        rua,
-        numero,
-        bairro,
-        cidade,
-        estado,
-        cep,
-        data_cadastro
-      `)
-      .order('nome', { ascending: true });
-
-    if (error) {
-      throw error;
-    }
-
-    return data ?? [];
-  } catch (error) {
-    console.log(
-      'Erro ao buscar clientes:',
-      error
-    );
-
-    throw error;
-  }
+function paraBanco(cliente: ClienteFormData) {
+  return {
+    nome: cliente.nome.trim(),
+    cpf: somenteNumeros(cliente.cpf),
+    email: cliente.email.trim() || null,
+    rua: cliente.rua.trim() || null,
+    numero: cliente.numero.trim() || null,
+    bairro: cliente.bairro.trim() || null,
+    cidade: cliente.cidade.trim() || null,
+    estado: cliente.estado.trim().toUpperCase() || null,
+    cep: somenteNumeros(cliente.cep) || null,
+  };
 }
 
 // ==================================================
-// CADASTRAR CLIENTE
+// CONSULTAS
 // ==================================================
 
-export async function cadastrarCliente(
-  cliente: ClienteFormData
-): Promise<Cliente> {
-  try {
-    const { data, error } = await supabase
-      .from('clientes')
-      .insert({
-        nome: cliente.nome.trim(),
-        cpf: cliente.cpf.replace(/\D/g, ''),
-        email: cliente.email.trim() || null,
-        rua: cliente.rua.trim() || null,
-        numero: cliente.numero.trim() || null,
-        bairro: cliente.bairro.trim() || null,
-        cidade: cliente.cidade.trim() || null,
-        estado:
-          cliente.estado.trim().toUpperCase() || null,
-        cep:
-          cliente.cep.replace(/\D/g, '') || null,
-      })
-      .select(`
-        id,
-        nome,
-        email,
-        cpf,
-        rua,
-        numero,
-        bairro,
-        cidade,
-        estado,
-        cep,
-        data_cadastro
-      `)
-      .single();
+export async function buscarClientes(): Promise<Cliente[]> {
+  const { data, error } = await supabase
+    .from('clientes')
+    .select(COLUNAS)
+    .order('nome', { ascending: true });
 
-    if (error) {
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.log(
-      'Erro ao cadastrar cliente:',
-      error
-    );
-
+  if (error) {
     throw error;
   }
+
+  return data ?? [];
 }
 
 export async function buscarClientePorId(
@@ -101,21 +45,29 @@ export async function buscarClientePorId(
 ): Promise<Cliente | null> {
   const { data, error } = await supabase
     .from('clientes')
-    .select(`
-      id,
-      nome,
-      email,
-      cpf,
-      rua,
-      numero,
-      bairro,
-      cidade,
-      estado,
-      cep,
-      data_cadastro
-    `)
+    .select(COLUNAS)
     .eq('id', id)
     .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+// ==================================================
+// GRAVAÇÃO
+// ==================================================
+
+export async function cadastrarCliente(
+  cliente: ClienteFormData
+): Promise<Cliente> {
+  const { data, error } = await supabase
+    .from('clientes')
+    .insert(paraBanco(cliente))
+    .select(COLUNAS)
+    .single();
 
   if (error) {
     throw error;
@@ -130,31 +82,9 @@ export async function atualizarCliente(
 ): Promise<Cliente> {
   const { data, error } = await supabase
     .from('clientes')
-    .update({
-      nome: cliente.nome.trim(),
-      cpf: cliente.cpf.replace(/\D/g, ''),
-      email: cliente.email.trim() || null,
-      rua: cliente.rua.trim() || null,
-      numero: cliente.numero.trim() || null,
-      bairro: cliente.bairro.trim() || null,
-      cidade: cliente.cidade.trim() || null,
-      estado: cliente.estado.trim().toUpperCase() || null,
-      cep: cliente.cep.replace(/\D/g, '') || null,
-    })
+    .update(paraBanco(cliente))
     .eq('id', id)
-    .select(`
-      id,
-      nome,
-      email,
-      cpf,
-      rua,
-      numero,
-      bairro,
-      cidade,
-      estado,
-      cep,
-      data_cadastro
-    `)
+    .select(COLUNAS)
     .single();
 
   if (error) {
@@ -165,13 +95,10 @@ export async function atualizarCliente(
 }
 
 // ==================================================
-// EXCLUIR CLIENTE (somente ADMIN, conforme regras do banco)
+// EXCLUIR CLIENTE
 // ==================================================
 
-export async function excluirCliente(
-  id: string,
-  nome: string
-): Promise<void> {
+export async function excluirCliente(id: string): Promise<void> {
   const { data, error } = await supabase
     .from('clientes')
     .delete()

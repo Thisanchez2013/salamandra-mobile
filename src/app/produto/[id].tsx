@@ -223,7 +223,7 @@ export default function ProdutoDetalheScreen() {
                   nome={produto.nome}
                   onExcluir={async () => {
                     try {
-                      await excluirProduto(produto.id, produto.nome);
+                      await excluirProduto(produto.id);
                       return null;
                     } catch (error) {
                       console.log('Erro ao excluir produto:', error);

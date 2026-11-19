@@ -120,11 +120,6 @@ export async function buscarVendaPorId(
 
 // ==================================================
 // REGISTRAR VENDA
-// Toda a regra fica no banco, na função registrar_venda_fifo (RPC):
-// ela cria a venda e os itens, baixa o estoque dos lotes mais
-// antigos primeiro (FIFO) e grava itens_venda_lote, numa transação só.
-// Se algo der errado (ex.: falta de estoque), nada é gravado e o banco
-// devolve um código de erro (ESTOQUE_INSUFICIENTE:<id>, SEM_PERMISSAO...).
 // ==================================================
 
 export interface ItemNovaVenda {
@@ -150,8 +145,6 @@ export async function registrarVenda(
     throw error;
   }
 
-  // A função devolve uma tabela com uma linha:
-  // id_venda, valor_total, custo_total e resultado.
   const linha = primeiro<{ id_venda: string }>(data);
 
   if (!linha) {
