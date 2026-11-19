@@ -121,20 +121,6 @@ export default function MenuScreen() {
   // AÇÕES
   // ==================================================
 
-  function avisarEmBreve(funcionalidade: string) {
-    Alert.alert(
-      'Em breve',
-      `${funcionalidade} ainda está em desenvolvimento.`
-    );
-  }
-
-  function mostrarSobre() {
-    Alert.alert(
-      'Salamandra Mobile',
-      'Sistema de gestão de clientes, produtos, estoque e vendas.\n\nProjeto Integrador.'
-    );
-  }
-
   function handleLogout() {
     Alert.alert(
       'Sair do sistema',
@@ -296,8 +282,7 @@ export default function MenuScreen() {
           icon="cart-outline"
           titulo="Nova venda"
           descricao="Registrar uma venda"
-          onPress={() => avisarEmBreve('O módulo de vendas')}
-          emBreve
+          onPress={() => router.push('/nova-venda')}
         />
 
         <ItemMenu
@@ -333,7 +318,7 @@ export default function MenuScreen() {
           icon="information-circle-outline"
           titulo="Sobre o app"
           descricao="Informações do Salamandra"
-          onPress={mostrarSobre}
+          onPress={() => router.push('/sobre')}
         />
 
         <ItemMenu

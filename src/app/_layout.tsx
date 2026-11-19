@@ -56,9 +56,11 @@ function Navegacao() {
         <Stack.Screen name="fornecedores" />
         <Stack.Screen name="fornecedor-formulario" />
         <Stack.Screen name="vendas" />
+        <Stack.Screen name="nova-venda" />
         <Stack.Screen name="venda/[id]" />
         <Stack.Screen name="relatorios" />
         <Stack.Screen name="auditoria" />
+        <Stack.Screen name="sobre" />
       </Stack.Protected>
 
       <Stack.Protected guard={!logado}>
