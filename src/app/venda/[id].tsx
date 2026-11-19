@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '../../components/ui/AppHeader';
@@ -15,7 +15,8 @@ import {
   formatarDataHora,
 } from '../../components/vendas/VendaCard';
 import { COLORS } from '../../constants/theme';
-import { buscarVendaPorId } from '../../services/vendaService';
+import { usePermissoes } from '../../hooks/usePermissoes';
+import { buscarVendaPorId, cancelarVenda } from '../../services/vendaService';
 import { VendaDetalhe } from '../../types/venda';
 import { formatarMoedaBRL } from '../../utils/currency';
 
@@ -58,6 +59,8 @@ export default function VendaDetalheScreen() {
   const [venda, setVenda] = useState<VendaDetalhe | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [cancelando, setCancelando] = useState(false);
+  const { podeCancelarVenda } = usePermissoes();
 
   const carregar = useCallback(async () => {
     try {
@@ -81,6 +84,37 @@ export default function VendaDetalheScreen() {
   );
 
   const cor = venda ? corDoStatus(venda.status) : COLORS.muted;
+
+  async function cancelar() {
+    try {
+      setCancelando(true);
+      await cancelarVenda(id);
+      await carregar();
+    } catch (error: any) {
+      console.log('Erro ao cancelar venda:', error);
+      Alert.alert(
+        'Não foi possível cancelar',
+        error?.message === 'SEM_PERMISSAO'
+          ? 'Só administradores e gerentes podem cancelar vendas.'
+          : error?.message === 'VENDA_JA_CANCELADA'
+            ? 'Esta venda já foi cancelada.'
+            : 'Verifique sua conexão e tente novamente.'
+      );
+    } finally {
+      setCancelando(false);
+    }
+  }
+
+  function confirmarCancelamento() {
+    Alert.alert(
+      'Cancelar venda',
+      'Os produtos voltam para o estoque e a venda sai dos relatórios. Deseja continuar?',
+      [
+        { text: 'Voltar', style: 'cancel' },
+        { text: 'Cancelar venda', style: 'destructive', onPress: () => void cancelar() },
+      ]
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-salamandra-background">
@@ -225,6 +259,23 @@ export default function VendaDetalheScreen() {
                   {venda.observacao}
                 </Text>
               </View>
+            ) : null}
+
+            {podeCancelarVenda && venda.status === 'Concluída' ? (
+              <Pressable
+                className={`mt-6 h-[54px] flex-row items-center justify-center rounded-[14px] border border-salamandra-errorBorder ${
+                  cancelando ? 'opacity-60' : 'active:opacity-70'
+                }`}
+                onPress={confirmarCancelamento}
+                disabled={cancelando}
+                accessibilityRole="button"
+                accessibilityLabel="Cancelar venda"
+              >
+                <Ionicons name="close-circle-outline" size={20} color={COLORS.error} />
+                <Text className="ml-2 text-sm font-extrabold text-salamandra-error">
+                  {cancelando ? 'CANCELANDO...' : 'CANCELAR VENDA'}
+                </Text>
+              </Pressable>
             ) : null}
           </>
         )}

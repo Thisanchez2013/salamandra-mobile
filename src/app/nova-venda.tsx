@@ -18,6 +18,7 @@ import {
   ErrorState,
   LoadingState,
 } from '../components/ui/EstadosTela';
+import { BuscaComLeitor } from '../components/ui/BuscaComLeitor';
 import { SearchInput } from '../components/ui/SearchInput';
 import { COLORS } from '../constants/theme';
 import { useNovaVenda } from '../hooks/useNovaVenda';
@@ -283,7 +284,7 @@ export default function NovaVendaScreen() {
               />
 
               <View className="-mt-5">
-                <SearchInput
+                <BuscaComLeitor
                   value={buscaProduto}
                   onChangeText={setBuscaProduto}
                   placeholder="Buscar produto por nome ou código"

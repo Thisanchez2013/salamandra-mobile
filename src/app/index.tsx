@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,11 +13,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLORS } from '../constants/theme';
 import { supabase } from '../lib/supabase';
+import { aplicarEdicao, mascararSenha, TEMPO_ULTIMA_LETRA_MS } from '../utils/senha';
 
 export default function LoginScreen() {
   const [usuario, setUsuario] = useState('');
   const [senha, setSenha] = useState('');
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [revelarUltima, setRevelarUltima] = useState(false);
+  const timerUltimaLetra = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const senhaExibida = mostrarSenha ? senha : mascararSenha(senha, revelarUltima);
+
+  useEffect(() => () => {
+    if (timerUltimaLetra.current) clearTimeout(timerUltimaLetra.current);
+  }, []);
   const [carregando, setCarregando] = useState(false);
 
   const [erroUsuario, setErroUsuario] = useState('');
@@ -139,8 +147,20 @@ export default function LoginScreen() {
     }
   }
 
+  // O secureTextEntry esconde a letra rápido demais, então a máscara é feita aqui.
   function handleSenhaChange(texto: string) {
-    setSenha(texto);
+    if (mostrarSenha) {
+      setSenha(texto);
+    } else {
+      const digitou = texto.length > senhaExibida.length;
+      setSenha(aplicarEdicao(senha, senhaExibida, texto));
+      setRevelarUltima(digitou);
+
+      if (timerUltimaLetra.current) clearTimeout(timerUltimaLetra.current);
+      if (digitou) {
+        timerUltimaLetra.current = setTimeout(() => setRevelarUltima(false), TEMPO_ULTIMA_LETRA_MS);
+      }
+    }
 
     if (erroSenha) {
       setErroSenha('');
@@ -250,13 +270,15 @@ export default function LoginScreen() {
                     placeholderTextColor={
                       COLORS.subtle
                     }
-                    value={senha}
+                    value={senhaExibida}
                     onChangeText={
                       handleSenhaChange
                     }
-                    secureTextEntry={
-                      !mostrarSenha
-                    }
+                    keyboardType={Platform.OS === 'android' ? 'visible-password' : 'default'}
+                    autoComplete="off"
+                    importantForAutofill="no"
+                    spellCheck={false}
+                    contextMenuHidden
                     autoCapitalize="none"
                     autoCorrect={false}
                     returnKeyType="done"

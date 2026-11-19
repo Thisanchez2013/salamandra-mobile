@@ -215,13 +215,18 @@ export default function HomeScreen() {
                 )}
               </View>
 
-              <View className="h-12 w-12 items-center justify-center rounded-[14px] bg-salamandra-surfaceLight">
+              <Pressable
+                className="h-12 w-12 items-center justify-center rounded-[14px] bg-salamandra-surfaceLight active:opacity-70"
+                onPress={() => router.push('/relatorios')}
+                accessibilityRole="button"
+                accessibilityLabel="Ver relatórios de faturamento"
+              >
                 <Ionicons
                   name="cash-outline"
                   size={24}
                   color={COLORS.gold}
                 />
-              </View>
+              </Pressable>
             </View>
 
             <View className="my-4 h-px bg-salamandra-border" />
@@ -355,12 +360,7 @@ export default function HomeScreen() {
 
               <Pressable
                 className="mb-3 h-16 w-[48.5%] flex-row items-center rounded-[15px] border border-salamandra-border bg-salamandra-card px-[14px] active:opacity-70"
-                onPress={() =>
-                  Alert.alert(
-                    'Em breve',
-                    'O módulo de vendas ainda está em desenvolvimento.'
-                  )
-                }
+                onPress={() => router.push('/nova-venda')}
               >
                 <View className="mr-[11px] h-9 w-9 items-center justify-center rounded-[10px] bg-salamandra-gold">
                   <Ionicons

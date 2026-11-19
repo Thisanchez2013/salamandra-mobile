@@ -153,3 +153,11 @@ export async function registrarVenda(
 
   return linha.id_venda;
 }
+
+export async function cancelarVenda(id: string): Promise<void> {
+  const { error } = await supabase.rpc('cancelar_venda', { p_id_venda: id });
+
+  if (error) {
+    throw error;
+  }
+}

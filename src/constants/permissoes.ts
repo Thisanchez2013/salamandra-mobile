@@ -13,6 +13,7 @@ export const PERMISSOES = {
   gerenciarFornecedores: ['ADMIN', 'GERENTE'],
   // Ver o registro de auditoria.
   verAuditoria: ['ADMIN', 'GERENTE'],
+  cancelarVenda: ['ADMIN', 'GERENTE'],
 } satisfies Record<string, Cargo[]>;
 
 export type Permissao = keyof typeof PERMISSOES;

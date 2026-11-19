@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -36,7 +37,6 @@ export default function EtiquetasScreen() {
   // Estados
   const [pesquisa, setPesquisa] = useState('');
   const [quantidades, setQuantidades] = useState<{ [id: string]: number }>({});
-  const [layoutGrade, setLayoutGrade] = useState<LayoutGrade>('20');
   const [tipoCodigo, setTipoCodigo] = useState<TipoCodigo>('barcode');
   const [gerando, setGerando] = useState(false);
 
@@ -55,6 +55,11 @@ export default function EtiquetasScreen() {
       const nova = Math.max(0, atual + delta);
       return { ...prev, [id]: nova };
     });
+  };
+
+  const definirQtd = (id: string, texto: string) => {
+    const nova = Math.min(999, Number(texto.replace(/\D/g, '')) || 0);
+    setQuantidades((prev) => ({ ...prev, [id]: nova }));
   };
 
   // Total de etiquetas selecionadas
@@ -88,7 +93,8 @@ export default function EtiquetasScreen() {
         }
       });
 
-      // Configuração de dimensões conforme a grade escolhida (10, 20 ou 30)
+      // Poucas etiquetas saem maiores; muitas, numa grade mais densa
+      const layoutGrade: LayoutGrade = totalEtiquetas <= 10 ? '10' : totalEtiquetas <= 20 ? '20' : '30';
       const configGrade: Record<LayoutGrade, { colunas: number; alturaEtiqueta: string; alturaImg: string; fontSize: string }> = {
         '10': { colunas: 2, alturaEtiqueta: '52mm', alturaImg: '26mm', fontSize: '12px' },
         '20': { colunas: 2, alturaEtiqueta: '26mm', alturaImg: '15mm', fontSize: '10px' },
@@ -197,7 +203,7 @@ export default function EtiquetasScreen() {
         onBack={() => router.back()}
       />
 
-      <ScrollView className="flex-1 px-[22px]" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-[22px]" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* CONFIGURAÇÃO DO TIPO DE CÓDIGO */}
         <Text className="mt-4 text-xs font-bold uppercase tracking-wider text-salamandra-muted">
         Formato do Código
@@ -248,32 +254,6 @@ export default function EtiquetasScreen() {
           </Pressable>
         </View>
 
-        {/* CONFIGURAÇÃO DA GRELHA A4 */}
-        <Text className="mt-5 text-xs font-bold uppercase tracking-wider text-salamandra-muted">
-          Grelha Folha A4 (Por Página)
-        </Text>
-        <View className="mt-2 flex-row gap-2">
-          {(['10', '20', '30'] as LayoutGrade[]).map((grade) => (
-            <Pressable
-              key={grade}
-              className={`flex-1 items-center justify-center rounded-xl border py-2.5 ${
-                layoutGrade === grade
-                  ? 'border-salamandra-gold bg-salamandra-gold/10'
-                  : 'border-salamandra-border bg-salamandra-card'
-              }`}
-              onPress={() => setLayoutGrade(grade)}
-            >
-              <Text
-                className={`text-sm font-bold ${
-                  layoutGrade === grade ? 'text-salamandra-gold' : 'text-salamandra-text'
-                }`}
-              >
-                {grade} por página
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
         {/* BUSCA E SELEÇÃO DE PRODUTOS */}
         <Text className="mt-6 text-xs font-bold uppercase tracking-wider text-salamandra-muted">
         Selecione os Produtos e Quantidades
@@ -322,9 +302,16 @@ export default function EtiquetasScreen() {
                       <Ionicons name="remove" size={16} color={COLORS.gold} />
                     </Pressable>
 
-                    <Text className="w-5 text-center font-bold text-salamandra-text">
-                      {qtd}
-                    </Text>
+                    <TextInput
+                      className="w-10 p-0 text-center font-bold text-salamandra-text"
+                      value={String(qtd)}
+                      onChangeText={(texto) => definirQtd(produto.id, texto)}
+                      keyboardType="number-pad"
+                      selectTextOnFocus
+                      maxLength={3}
+                      selectionColor={COLORS.gold}
+                      accessibilityLabel={`Quantidade de etiquetas de ${produto.nome}`}
+                    />
 
                     <Pressable
                       className="h-8 w-8 items-center justify-center rounded-md bg-salamandra-card"

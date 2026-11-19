@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppHeader } from '../components/ui/AppHeader';
@@ -10,10 +10,12 @@ import {
   LoadingState,
 } from '../components/ui/EstadosTela';
 import { FiltroChips, OpcaoChip } from '../components/ui/FiltroChips';
+import { SeletorData } from '../components/ui/SeletorData';
 import { COLORS } from '../constants/theme';
 import {
   ItemRanking,
   PeriodoRelatorio,
+  TipoRelatorio,
   useRelatorios,
 } from '../hooks/useRelatorios';
 import { formatarMoedaBRL } from '../utils/currency';
@@ -23,6 +25,13 @@ const PERIODOS: OpcaoChip<PeriodoRelatorio>[] = [
   { valor: '30dias', rotulo: '30 dias' },
   { valor: 'mes', rotulo: 'Este mês' },
   { valor: 'todos', rotulo: 'Tudo' },
+  { valor: 'personalizado', rotulo: 'Período' },
+];
+
+const TIPOS: OpcaoChip<TipoRelatorio>[] = [
+  { valor: 'ambos', rotulo: 'Entradas e saídas' },
+  { valor: 'saida', rotulo: 'Saídas (vendas)' },
+  { valor: 'entrada', rotulo: 'Entradas (estoque)' },
 ];
 
 type NomeIcone = keyof typeof Ionicons.glyphMap;
@@ -153,6 +162,14 @@ export default function RelatoriosScreen() {
     relatorio,
     periodo,
     setPeriodo,
+    tipo,
+    setTipo,
+    dataInicial,
+    setDataInicial,
+    dataFinal,
+    setDataFinal,
+    exportar,
+    exportando,
     carregando,
     atualizando,
     erro,
@@ -200,12 +217,67 @@ export default function RelatoriosScreen() {
                 selecionado={periodo}
                 onChange={setPeriodo}
               />
+
+              {periodo === 'personalizado' ? (
+                <View className="mt-3 flex-row gap-2">
+                  <SeletorData
+                    rotulo="DE"
+                    valor={dataInicial}
+                    maximo={dataFinal}
+                    onChange={setDataInicial}
+                  />
+                  <SeletorData
+                    rotulo="ATÉ"
+                    valor={dataFinal}
+                    minimo={dataInicial}
+                    onChange={setDataFinal}
+                  />
+                </View>
+              ) : null}
+
+              <FiltroChips
+                opcoes={TIPOS}
+                selecionado={tipo}
+                onChange={setTipo}
+              />
             </View>
 
             {/* ==================================================
                                 INDICADORES
                ================================================== */}
 
+            {tipo !== 'saida' ? (
+              <>
+                <TituloSecao
+                  titulo="Entradas de estoque"
+                  subtitulo="Lotes cadastrados no período"
+                />
+
+                <View className="flex-row flex-wrap justify-between">
+                  <Indicador
+                    icon="file-tray-stacked-outline"
+                    titulo="LOTES"
+                    valor={String(relatorio.entradas.lotes)}
+                  />
+
+                  <Indicador
+                    icon="cube-outline"
+                    titulo="UNIDADES"
+                    valor={String(relatorio.entradas.unidades)}
+                  />
+
+                  <Indicador
+                    icon="wallet-outline"
+                    titulo="CUSTO TOTAL"
+                    valor={formatarMoedaBRL(relatorio.entradas.custoTotal)}
+                    destaque
+                  />
+                </View>
+              </>
+            ) : null}
+
+            {tipo !== 'entrada' ? (
+            <>
             <View className="mt-5 flex-row flex-wrap justify-between">
               <Indicador
                 icon="cash-outline"
@@ -255,6 +327,30 @@ export default function RelatoriosScreen() {
                               MAIS VENDIDOS
                ================================================== */}
 
+            </>
+            ) : null}
+
+            {/* ==================================================
+                                EXPORTAR
+               ================================================== */}
+
+            <Pressable
+              className={`mt-6 h-[50px] flex-row items-center justify-center rounded-[14px] border border-salamandra-gold ${
+                exportando ? 'opacity-60' : 'active:opacity-70'
+              }`}
+              onPress={() => void exportar()}
+              disabled={exportando}
+              accessibilityRole="button"
+              accessibilityLabel="Exportar para Excel"
+            >
+              <Ionicons name="download-outline" size={20} color={COLORS.gold} />
+              <Text className="ml-2 text-sm font-extrabold text-salamandra-gold">
+                {exportando ? 'GERANDO PLANILHA...' : 'EXPORTAR EXCEL'}
+              </Text>
+            </Pressable>
+
+            {tipo !== 'entrada' ? (
+            <>
             <TituloSecao
               titulo="Produtos mais vendidos"
               subtitulo="Por valor vendido no período"
@@ -297,6 +393,9 @@ export default function RelatoriosScreen() {
                 }
               />
             )}
+
+            </>
+            ) : null}
 
             {/* ==================================================
                               ESTOQUE BAIXO

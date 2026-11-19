@@ -12,5 +12,6 @@ export function usePermissoes() {
     podeGerenciarProdutos: temPermissao(cargo, 'gerenciarProdutos'),
     podeGerenciarFornecedores: temPermissao(cargo, 'gerenciarFornecedores'),
     podeVerAuditoria: temPermissao(cargo, 'verAuditoria'),
+    podeCancelarVenda: temPermissao(cargo, 'cancelarVenda'),
   };
 }
