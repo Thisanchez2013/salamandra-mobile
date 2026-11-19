@@ -106,6 +106,9 @@ export default function VendasScreen() {
         title="Histórico de vendas"
         subtitle="Vendas realizadas"
         onBack={() => router.back()}
+        actionIcon="add"
+        actionLabel="Nova venda"
+        onActionPress={() => router.push('/nova-venda')}
       />
 
       {carregando ? (

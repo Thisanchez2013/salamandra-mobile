@@ -117,3 +117,46 @@ export async function buscarVendaPorId(
     itens,
   };
 }
+
+// ==================================================
+// REGISTRAR VENDA
+// Toda a regra fica no banco, na função registrar_venda_fifo (RPC):
+// ela cria a venda e os itens, baixa o estoque dos lotes mais
+// antigos primeiro (FIFO) e grava itens_venda_lote, numa transação só.
+// Se algo der errado (ex.: falta de estoque), nada é gravado e o banco
+// devolve um código de erro (ESTOQUE_INSUFICIENTE:<id>, SEM_PERMISSAO...).
+// ==================================================
+
+export interface ItemNovaVenda {
+  idProduto: string;
+  quantidade: number;
+}
+
+export async function registrarVenda(
+  idCliente: string,
+  itens: ItemNovaVenda[],
+  observacao: string
+): Promise<string> {
+  const { data, error } = await supabase.rpc('registrar_venda_fifo', {
+    p_id_cliente: idCliente,
+    p_observacao: observacao.trim() || null,
+    p_itens: itens.map((item) => ({
+      id_produto: item.idProduto,
+      quantidade: item.quantidade,
+    })),
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  // A função devolve uma tabela com uma linha:
+  // id_venda, valor_total, custo_total e resultado.
+  const linha = primeiro<{ id_venda: string }>(data);
+
+  if (!linha) {
+    throw new Error('A venda não retornou o id.');
+  }
+
+  return linha.id_venda;
+}
