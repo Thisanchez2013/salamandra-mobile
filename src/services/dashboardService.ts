@@ -29,41 +29,28 @@ export interface DashboardDados {
 export async function buscarDadosDashboard(): Promise<DashboardDados> {
   try {
     // ==================================================
-    // FATURAMENTO
+    // FATURAMENTO E QUANTIDADE DE VENDAS
+    // Somados a partir da view faturamento_diario (uma linha por dia),
+    // em vez de baixar o valor de todas as vendas.
     // ==================================================
 
-    const { data: vendas, error: vendasError } = await supabase
-      .from('vendas')
-      .select('valor_total')
-      .eq('status', 'Concluída');
+    const { data: dias, error: diasError } = await supabase
+      .from('faturamento_diario')
+      .select('faturamento, quantidade_vendas');
 
-    if (vendasError) {
-      throw vendasError;
+    if (diasError) {
+      throw diasError;
     }
 
-    const faturamento = (vendas ?? []).reduce(
-      (total, venda) => total + Number(venda.valor_total ?? 0),
+    const faturamento = (dias ?? []).reduce(
+      (total, dia) => total + Number(dia.faturamento ?? 0),
       0
     );
 
-    // ==================================================
-    // QUANTIDADE DE VENDAS
-    // ==================================================
-
-    const {
-      count: quantidadeVendas,
-      error: quantidadeVendasError,
-    } = await supabase
-      .from('vendas')
-      .select('*', {
-        count: 'exact',
-        head: true,
-      })
-      .eq('status', 'Concluída');
-
-    if (quantidadeVendasError) {
-      throw quantidadeVendasError;
-    }
+    const quantidadeVendas = (dias ?? []).reduce(
+      (total, dia) => total + Number(dia.quantidade_vendas ?? 0),
+      0
+    );
 
     // ==================================================
     // QUANTIDADE DE PRODUTOS
@@ -103,7 +90,7 @@ export async function buscarDadosDashboard(): Promise<DashboardDados> {
 
     // ==================================================
     // ESTOQUE BAIXO
-    // Consideramos estoque <= 10 por enquanto.
+    // Contado no banco pela view estoque_baixo (até 10 unidades).
     // ==================================================
 
     const estoqueBaixo = await contarProdutosComEstoqueBaixo();
@@ -150,7 +137,7 @@ export async function buscarDadosDashboard(): Promise<DashboardDados> {
 
     return {
       faturamento,
-      quantidadeVendas: quantidadeVendas ?? 0,
+      quantidadeVendas,
       quantidadeProdutos: quantidadeProdutos ?? 0,
       quantidadeClientes: quantidadeClientes ?? 0,
       estoqueBaixo,

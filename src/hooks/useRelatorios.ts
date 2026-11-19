@@ -1,28 +1,24 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
-import { precisaReporEstoque } from '../constants/estoque';
-import {
-  buscarDadosRelatorio,
-  DadosRelatorio,
-} from '../services/relatorioService';
+import { buscarRelatorio, Relatorio } from '../services/relatorioService';
+
+export type { ItemRanking } from '../services/relatorioService';
 
 export type PeriodoRelatorio = '7dias' | '30dias' | 'mes' | 'todos';
 
-export interface ItemRanking {
-  nome: string;
-  valor: number;
-  quantidade: number;
-}
-
-const DADOS_VAZIOS: DadosRelatorio = {
-  vendas: [],
-  itens: [],
-  produtos: [],
+const RELATORIO_VAZIO: Relatorio = {
+  faturamento: 0,
+  quantidadeVendas: 0,
+  ticketMedio: 0,
+  itensVendidos: 0,
+  canceladas: 0,
+  maisVendidos: [],
+  melhoresClientes: [],
+  estoqueBaixo: [],
 };
 
-const TAMANHO_RANKING = 5;
-
+// Primeiro instante do período, no horário do celular.
 function inicioDoPeriodo(periodo: PeriodoRelatorio): Date | null {
   if (periodo === 'todos') {
     return null;
@@ -42,39 +38,31 @@ function inicioDoPeriodo(periodo: PeriodoRelatorio): Date | null {
   return inicio;
 }
 
-// Soma valores por nome e devolve os maiores.
-function ranking(
-  entradas: { nome: string; valor: number; quantidade: number }[]
-): ItemRanking[] {
-  const mapa = new Map<string, ItemRanking>();
-
-  entradas.forEach(({ nome, valor, quantidade }) => {
-    const atual = mapa.get(nome) ?? { nome, valor: 0, quantidade: 0 };
-    atual.valor += valor;
-    atual.quantidade += quantidade;
-    mapa.set(nome, atual);
-  });
-
-  return [...mapa.values()]
-    .sort((a, b) => b.valor - a.valor)
-    .slice(0, TAMANHO_RANKING);
+// Data no formato da coluna "dia" das views (AAAA-MM-DD).
+function formatarDia(data: Date): string {
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${data.getFullYear()}-${mes}-${dia}`;
 }
 
 export function useRelatorios() {
-  const [dados, setDados] = useState<DadosRelatorio>(DADOS_VAZIOS);
+  const [relatorio, setRelatorio] = useState<Relatorio>(RELATORIO_VAZIO);
   const [periodo, setPeriodo] = useState<PeriodoRelatorio>('30dias');
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   // ==================================================
-  // CARREGAMENTO
+  // CARREGAMENTO (refaz a consulta quando o período muda)
   // ==================================================
 
   const carregar = useCallback(async () => {
     try {
       setErro(null);
-      setDados(await buscarDadosRelatorio());
+      const inicio = inicioDoPeriodo(periodo);
+      setRelatorio(
+        await buscarRelatorio(inicio ? formatarDia(inicio) : null, inicio)
+      );
     } catch (error) {
       console.log('Erro ao carregar relatórios:', error);
       setErro(
@@ -83,7 +71,7 @@ export function useRelatorios() {
     } finally {
       setCarregando(false);
     }
-  }, []);
+  }, [periodo]);
 
   const atualizar = useCallback(async () => {
     setAtualizando(true);
@@ -101,64 +89,6 @@ export function useRelatorios() {
       carregar();
     }, [carregar])
   );
-
-  // ==================================================
-  // INDICADORES
-  // ==================================================
-
-  const relatorio = useMemo(() => {
-    const inicio = inicioDoPeriodo(periodo);
-
-    const vendasPeriodo = dados.vendas.filter(
-      (venda) => !inicio || new Date(venda.data) >= inicio
-    );
-
-    const concluidas = vendasPeriodo.filter(
-      (venda) => venda.status === 'Concluída'
-    );
-    const idsConcluidas = new Set(concluidas.map((venda) => venda.id));
-
-    const itensConcluidos = dados.itens.filter((item) =>
-      idsConcluidas.has(item.idVenda)
-    );
-
-    const faturamento = concluidas.reduce(
-      (soma, venda) => soma + venda.valorTotal,
-      0
-    );
-
-    const estoqueBaixo = dados.produtos
-      .filter((produto) => precisaReporEstoque(produto.quantidadeDisponivel))
-      .sort((a, b) => a.quantidadeDisponivel - b.quantidadeDisponivel);
-
-    return {
-      faturamento,
-      quantidadeVendas: concluidas.length,
-      ticketMedio: concluidas.length > 0 ? faturamento / concluidas.length : 0,
-      itensVendidos: itensConcluidos.reduce(
-        (soma, item) => soma + item.quantidade,
-        0
-      ),
-      canceladas: vendasPeriodo.filter((venda) =>
-        venda.status.toLocaleLowerCase('pt-BR').startsWith('cancel')
-      ).length,
-      maisVendidos: ranking(
-        itensConcluidos.map((item) => ({
-          nome: item.produto,
-          valor: item.subtotal,
-          quantidade: item.quantidade,
-        }))
-      ),
-      melhoresClientes: ranking(
-        concluidas.map((venda) => ({
-          nome: venda.cliente,
-          valor: venda.valorTotal,
-          quantidade: 1,
-        }))
-      ),
-      estoqueBaixo,
-    };
-  }, [dados, periodo]);
 
   return {
     relatorio,

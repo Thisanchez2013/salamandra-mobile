@@ -1,9 +1,7 @@
 import { supabase } from '../lib/supabase';
-import { precisaReporEstoque } from '../constants/estoque';
 import { EntradaEstoqueData, LoteProduto, Produto, ProdutoFormData } from '../types/produto';
 import { converterMoeda } from '../utils/currency';
 import { garantirExcluido } from '../utils/erros';
-import { registrarAuditoria } from './auditoriaService';
 
 type ProdutoRow = Omit<Produto, 'quantidadeDisponivel'>;
 type LoteRow = LoteProduto;
@@ -29,18 +27,22 @@ async function buscarTodosOsLotes(idProduto?: string): Promise<LoteRow[]> {
   }
 }
 
-async function buscarTodosOsProdutos(): Promise<ProdutoRow[]> {
-  const produtos: ProdutoRow[] = [];
+// Linha da view saldo_produtos (sql/02_saldo_produtos.sql):
+// o banco já devolve o saldo somado dos lotes de cada produto.
+type SaldoRow = ProdutoRow & { quantidade_disponivel: number };
+
+async function buscarSaldoProdutos(): Promise<SaldoRow[]> {
+  const produtos: SaldoRow[] = [];
   let inicio = 0;
   while (true) {
     const { data, error } = await supabase
-      .from('produtos')
-      .select('id, codigo, nome, descricao, preco_venda, created_at')
+      .from('saldo_produtos')
+      .select('id, codigo, nome, descricao, preco_venda, created_at, quantidade_disponivel')
       .order('nome', { ascending: true })
       .order('id', { ascending: true })
       .range(inicio, inicio + TAMANHO_PAGINA - 1);
     if (error) throw error;
-    const pagina = (data ?? []) as ProdutoRow[];
+    const pagina = (data ?? []) as SaldoRow[];
     produtos.push(...pagina);
     if (pagina.length < TAMANHO_PAGINA) return produtos;
     inicio += TAMANHO_PAGINA;
@@ -56,27 +58,23 @@ function mapearProduto(row: ProdutoRow, lotes: LoteRow[]): Produto {
 }
 
 export async function buscarProdutos(): Promise<Produto[]> {
-  const [produtos, lotes] = await Promise.all([buscarTodosOsProdutos(), buscarTodosOsLotes()]);
+  const produtos = await buscarSaldoProdutos();
 
-  const lotesPorProduto = new Map<string, LoteRow[]>();
-  (lotes ?? []).forEach((lote) => {
-    const atuais = lotesPorProduto.get(lote.id_produto) ?? [];
-    atuais.push(lote as LoteRow);
-    lotesPorProduto.set(lote.id_produto, atuais);
-  });
-
-  return (produtos ?? []).map((produto) =>
-    mapearProduto(produto as ProdutoRow, lotesPorProduto.get(produto.id) ?? [])
-  );
+  return produtos.map(({ quantidade_disponivel, ...produto }) => ({
+    ...produto,
+    preco_venda: Number(produto.preco_venda),
+    quantidadeDisponivel: Number(quantidade_disponivel),
+  }));
 }
 
+// Conta direto no banco (view estoque_baixo, sql/04_relatorios.sql),
+// sem baixar a lista de produtos.
 export async function contarProdutosComEstoqueBaixo(): Promise<number> {
-  const [produtos, lotes] = await Promise.all([buscarTodosOsProdutos(), buscarTodosOsLotes()]);
-  const saldoPorProduto = new Map<string, number>();
-  lotes.forEach((lote) => {
-    saldoPorProduto.set(lote.id_produto, (saldoPorProduto.get(lote.id_produto) ?? 0) + Number(lote.quantidade));
-  });
-  return produtos.filter((produto) => precisaReporEstoque(saldoPorProduto.get(produto.id) ?? 0)).length;
+  const { count, error } = await supabase
+    .from('estoque_baixo')
+    .select('*', { count: 'exact', head: true });
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export async function buscarProdutoPorId(id: string): Promise<{ produto: Produto; lotes: LoteProduto[] } | null> {
@@ -106,8 +104,7 @@ export async function salvarProduto(form: ProdutoFormData, id?: string): Promise
     ? await supabase.from('produtos').update(payload).eq('id', id).select('id').single()
     : await supabase.from('produtos').insert(payload).select('id').single();
   if (error) throw error;
-
-  await registrarAuditoria(id ? 'EDITAR' : 'CRIAR', `Produto: ${payload.nome}`);
+  // A auditoria é gravada pelo trigger do banco (sql/03_auditoria_triggers.sql).
 }
 
 // Exclusão (somente ADMIN). O banco bloqueia se o produto tiver lotes ou vendas.
@@ -121,8 +118,6 @@ export async function excluirProduto(id: string, nome: string): Promise<void> {
   if (error) throw error;
 
   garantirExcluido(data);
-
-  await registrarAuditoria('EXCLUIR', `Produto: ${nome}`);
 }
 
 export async function registrarEntradaEstoque(
@@ -136,9 +131,5 @@ export async function registrarEntradaEstoque(
     custo_unitario: converterMoeda(form.custoUnitario),
   });
   if (error) throw error;
-
-  await registrarAuditoria(
-    'ENTRADA_ESTOQUE',
-    `Lote ${form.codigoLote.trim()}: ${Number(form.quantidade)} un.`
-  );
+  // O trigger do banco registra a entrada na auditoria (ENTRADA_ESTOQUE).
 }
